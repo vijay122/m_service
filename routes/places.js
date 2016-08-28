@@ -32,7 +32,7 @@ var publicConfig = {
 
 var gmAPI = new GoogleMapsAPI(publicConfig);
 
-Touringutility = require('./utils');
+var Touringutility = require('./utils');
 
 var db = new Db('placesDB', server, {safe: true});
 
