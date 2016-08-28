@@ -39,6 +39,9 @@
     "node": "<= 4.2.2"
   },
   "devDependencies": {
-    "cloudinary": "^1.4.1"
+    "cloudinary": "^1.4.1",
+    "express-session": "^1.14.1",
+    "socket-io": "0.0.0",
+    "socket.io": "^1.4.8"
   }
 }
