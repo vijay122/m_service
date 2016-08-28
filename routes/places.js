@@ -1085,9 +1085,36 @@ function BuildPlacesFromPlaceIdForPackage(placeids, type) {
     }
 }
 
+function DesitionEngine(req)
+{
+    var string={};//JSON.stringify({});
+    var table = req.body.table== null?'ALL':req.body.table;
+    var latitude= req.body.latitude;
+    var longitude = req.body.longitude;
+    var searchtype = req.body.searchtype;
+    var searchvalue = req.body.searchvalue;
+    var numberofrecords = req.body.noofrequests== null?10:req.body.noofrequests;
+   var filterparameters =[];
+    if(searchtype!= undefined)
+    {
+        var st = {};
+        st[searchtype] = req.body.searchvalue;
+        //filterparameters.push(st);
+        string = st;//JSON.stringify(st);
+
+    }
+    return string;
+
+}
+exports.getstatus= function(req,res)
+{
+    res.status(200).send("server is up");
+}
+
 exports.GetProducts = function (req, res) {
     try {
         var deleteFunctions = [];
+       var filterrequest = DesitionEngine(req);
       console.log('inside getproducts');
       var table = req.body.table== null?'ALL':req.body.table;
         var productid = req.body.product;
@@ -1097,6 +1124,10 @@ exports.GetProducts = function (req, res) {
         datatable.push('hotels');
         datatable.push('places');
         datatable.push('packages');
+      }
+      else if(table=="packages")
+      {
+          datatable.push('packages');
       }
       else {
         //  datatable.push(table);
@@ -1109,7 +1140,7 @@ exports.GetProducts = function (req, res) {
       
          for (var  i = 0; i < datatable.length; i++ ) {
            
-             deleteFunctions.push(deleteFunction(datatable[i]));
+             deleteFunctions.push(deleteFunction(datatable[i],filterrequest));
          }
         var productidlist =[];
         productidlist.push(productid);
@@ -1142,10 +1173,10 @@ exports.GetProducts = function (req, res) {
     }
 }
 
-deleteFunction =function (table, callback) {
+deleteFunction =function (table, filterfunction, callback) {
     return  function(callback) {
         db.collection(table, function (err, collection) {
-            collection.find().limit(4).toArray(function (err, items) {
+            collection.find(filterfunction).limit(4).toArray(function (err, items) {
                 callback(null, items);
             });
         });

@@ -142,7 +142,7 @@ app.post('/login', place.loadUserInfo);
 app.post('/register', place.addUser);
 app.post('/getTemperature/:location', place.getTemperature);
 app.get('/autocomplete/:search',place.getTypeAheadPlaceNames);
-
+app.get('/isready',place.getstatus);
 app.get('/typeahead/:id',place.getTypeAheadPlaceNames);
 
 app.post('/SendCallbackMessage/:tn', Touringutility.SendMessage);
