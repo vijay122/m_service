@@ -1173,7 +1173,7 @@ exports.GetProducts = function (req, res) {
     }
 }
 
-deleteFunction =function (table, filterfunction, callback) {
+var deleteFunction =function (table, filterfunction, callback) {
     return  function(callback) {
         db.collection(table, function (err, collection) {
             collection.find(filterfunction).limit(4).toArray(function (err, items) {
