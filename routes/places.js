@@ -11,7 +11,7 @@ var Server = mongo.Server,
 
 var mongoconnection = "mongodb://user:password@ds019916.mlab.com:19916/heroku_wls18qcv";
 
-server = new Server(mongoconnection,{auto_reconnect:true});
+var server = new Server(mongoconnection,{auto_reconnect:true});
 var GoogleMapsAPI = require('googlemaps');
 var forecast = new Forecast({
     service: 'forecast.io',
