@@ -7,11 +7,11 @@ var Async = require('async');
 var Server = mongo.Server,
     Db = mongo.Db,
     BSON = mongo.BSONPure;
-//var server = new Server('localhost', 27017, {auto_reconnect: true});
+var server = new Server('localhost', 27017, {auto_reconnect: true});
 
-var mongoconnection = "mongodb://user:password@ds019916.mlab.com:19916/heroku_wls18qcv";
+//var mongoconnection = "mongodb://user:password@ds019916.mlab.com:19916/heroku_wls18qcv";
 
-var server = new Server(mongoconnection,{auto_reconnect:true});
+//var server = new Server(mongoconnection,{auto_reconnect:true});
 var GoogleMapsAPI = require('googlemaps');
 var forecast = new Forecast({
     service: 'forecast.io',
