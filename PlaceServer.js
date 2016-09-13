@@ -141,6 +141,7 @@ app.post('/geoCode', place.GeoCode);
 app.post('/login', place.loadUserInfo);
 app.post('/register', place.addUser);
 app.post('/getTemperature/:location', place.getTemperature);
+app.post('/viewmore', place.getNearbyPlaces);
 app.get('/autocomplete/:search',place.getTypeAheadPlaceNames);
 app.get('/isready',place.getstatus);
 app.get('/typeahead/:id',place.getTypeAheadPlaceNames);

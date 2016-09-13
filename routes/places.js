@@ -7,7 +7,8 @@ var Async = require('async');
 var Server = mongo.Server,
     Db = mongo.Db,
     BSON = mongo.BSONPure;
-var server = new Server('localhost', 27017, {auto_reconnect: true});
+var server = new Server('192.169.164.164', 27017, {auto_reconnect: true});
+var geolib  = require('geolib');
 
 //var mongoconnection = "mongodb://user:password@ds019916.mlab.com:19916/heroku_wls18qcv";
 
@@ -1463,6 +1464,32 @@ Array.prototype.unique = function() {
     return a;
 };
 
+exports.getNearbyPlaces =function(req,res)
+{
+    var table = req.body.table;
+    var referencelocation = req.body.product;
+    var lastproduct = req.body.product.nearbylocation[req.body.product.nearbylocation.length-1];
+    var inMeters = geolib.getDistance(
+        {latitude: lastproduct.lat, longitude: lastproduct.lon},
+        {latitude: referencelocation.latitude, longitude: referencelocation.longitude}
+    );
+    db.collection(table).ensureIndex({ "point": "2dsphere" });
+    db.collection("placeLocationIDLookup").find({
+        location: {
+            $near: {
+                $geometry: {
+                    type: "Point",
+                    coordinates: [parseFloat(referencelocation.longitude), parseFloat(referencelocation.latitude)]
+                },
+                $minDistance : inMeters
+            }
+        }
+    }).toArray(function(err, res)
+    {
+     debugger;
+    });
+
+}
 
 
 

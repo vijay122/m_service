@@ -20,28 +20,28 @@
   "author": "Vijay-A-",
   "license": "ISC",
   "dependencies": {
-    "cloudinary": "^1.4.1",
-    "express-session": "^1.14.1",
-    "socket-io": "0.0.0",
-    "socket.io": "^1.4.8",
     "async": "^1.5.2",
     "babel": "4.7.16",
     "babel-core": "^6.3.15",
     "body-parser": "^1.15.0",
+    "cloudinary": "^1.4.1",
     "connect-busboy": "0.0.2",
     "express": "^4.13.4",
+    "express-session": "^1.14.1",
     "forecast": "^0.2.1",
     "fs-extra": "^0.28.0",
+    "geolib": "^2.0.21",
     "googlemaps": "^1.11.1",
     "literalify": "^0.4.0",
     "mongodb": "^2.1.16",
     "multer": "^1.0.1",
     "s3-image-uploader": "^1.0.4",
-    "smsgateway": "^0.1.2"
+    "smsgateway": "^0.1.2",
+    "socket-io": "0.0.0",
+    "socket.io": "^1.4.8"
   },
   "engines": {
     "node": "<= 4.2.2"
   },
-  "devDependencies": {
-  }
+  "devDependencies": {}
 }
