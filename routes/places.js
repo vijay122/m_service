@@ -7,7 +7,7 @@ var Async = require('async');
 var Server = mongo.Server,
     Db = mongo.Db,
     BSON = mongo.BSONPure;
-var server = new Server('192.169.164.164', 27017, {auto_reconnect: true});
+var server = new Server('192.169.147.51', 27017, {auto_reconnect: true});
 var geolib  = require('geolib');
 
 //var mongoconnection = "mongodb://user:password@ds019916.mlab.com:19916/heroku_wls18qcv";
