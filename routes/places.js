@@ -241,10 +241,14 @@ exports.GetDataForHomePage = function (req, res) {
                     if (docs == null)
                     {
                         callback(null, null);
+
                     }
-                    var resultSet = [];
+                    else {
+						callback(null, docs);
+					}
+                    //var resultSet = [];
                   //  res.send(docs);
-                    callback(null, docs);
+
                 });
             }
     ],
