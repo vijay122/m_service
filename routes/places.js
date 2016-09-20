@@ -174,40 +174,44 @@ exports.GetDataForHomePage = function (req, res) {
                 if (docs == null) {
                     callback(null, null);
                 }
-                var resultSet = [];
-                db.collection('placeLocationIDLookup').ensureIndex({loc: '2dsphere'}, function (error) {
-                    if (error) {
-                    }
+                else
+				{
+					var resultSet = [];
+					db.collection('placeLocationIDLookup').ensureIndex({loc: '2dsphere'}, function (error) {
+						if (error) {
+						}
 
-                    docs.forEach(function (doc) {
-                        db.collection('placeLocationIDLookup').find({
-                            location: {
-                                $near: {
-                                    $geometry: {
-                                        type: "Point",
-                                        coordinates: [parseFloat(doc.longitude), parseFloat(doc.latitude)]
-                                    }
-                                    // $maxDistance : <distance in meters>
-                                }
-                            }
-                        }).toArray(function (err, nearbyplace) {
-                            if (err) return console.dir(err)
-                            {
-                                // doc.Scrollimages = [];//GetFileInsideFolderByName("C:\\inetpub\\wwwroot\\Tourist\\images\\", doc.name);
-                                doc.nearbylocation = BuildNearbyPlacesList(nearbyplace, doc);
-                                doc.suggestions = BuildSuggestionListByType(docs, doc);
-                                // doc.timings = doc.timings.split('.');
-                                doc.landmark = doc.landmark.split('.');
-                                resultSet.push(doc);
-                                if (docs.length == resultSet.length) {
-                                 //   res.send(resultSet);
-                                    callback(null, resultSet);
-                                }
-                            }
-                        });
+						docs.forEach(function (doc) {
+							db.collection('placeLocationIDLookup').find({
+								location: {
+									$near: {
+										$geometry: {
+											type: "Point",
+											coordinates: [parseFloat(doc.longitude), parseFloat(doc.latitude)]
+										}
+										// $maxDistance : <distance in meters>
+									}
+								}
+							}).toArray(function (err, nearbyplace) {
+								if (err) return console.dir(err)
+								{
+									// doc.Scrollimages = [];//GetFileInsideFolderByName("C:\\inetpub\\wwwroot\\Tourist\\images\\", doc.name);
+									doc.nearbylocation = BuildNearbyPlacesList(nearbyplace, doc);
+									doc.suggestions = BuildSuggestionListByType(docs, doc);
+									// doc.timings = doc.timings.split('.');
+									doc.landmark = doc.landmark.split('.');
+									resultSet.push(doc);
+									if (docs.length == resultSet.length) {
+										//   res.send(resultSet);
+										callback(null, resultSet);
+									}
+								}
+							});
 
-                    });
-                });
+						});
+					});
+				}
+
             });
         },
         function(callback) {
