@@ -25,6 +25,10 @@ var forecast = new Forecast({
     }
 });
 
+var connectionString = 'mongodb://localhost:27017/placesDB';
+var mongojs = require('mongojs');
+var db = mongojs(connectionString);
+
 
 
 var publicConfig = {
@@ -39,8 +43,8 @@ var gmAPI = new GoogleMapsAPI(publicConfig);
 
 var Touringutility = require('./utils');
 
-var db = new Db('placesDB', server, {safe: true});
-
+//var db = new Db('placesDB', server, {safe: true});
+/*
 db.open(function (err, db) {
     if (!err) {
         console.log("'placesDB' opened for connection with Livelytrips");
@@ -52,6 +56,7 @@ db.open(function (err, db) {
         });
     }
 });
+*/
 
 
 exports.SaveScrollImages = function (req, res) {
