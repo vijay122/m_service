@@ -2,6 +2,7 @@ var express = require('express'),
     path = require('path'),
     http = require('http'),
     place = require('./routes/places'),
+	user = require('./routes/users'),
     Touringutility = require('./routes/utils');
 
 var busboy = require('connect-busboy'); //middleware for form/file
