@@ -1405,51 +1405,74 @@ exports.addPackage = function (req, res) {
 }
 
 exports.addUser = function (req, res) {
-    var user = req.body.name;
+    var user = {};
+    user.name = req.body.name;
     var firsttimekey ="jhikj";// rand.generate(7);
-    user.passwd = firsttimekey;
+    user.password = firsttimekey;
     console.log('Adding user: ' + JSON.stringify(user));
 
-    db.createUser(
-        {
-            user: user,
-            pwd: firsttimekey,
-            roles:
-                [
-                    { role: "readWrite", db: "config" },
-                    "clusterAdmin"
-                ]
-        }
-    );
+	MongoClient.connect(connectionString, function(err, db) {
+		db.collection('users', function (err, collection) {
+			collection.insert(user, {safe: true}, function (err, result) {
+				if (err) {
+					res.send({'error': 'An error has occurred'});
+				} else {
+					console.log('Success: inserted into users ' + JSON.stringify(result[0]));
+				}
+				});
+		});
+});
 }
 exports.loadUserInfo = function (req, res) {
-    var user = req.body.name;
-    if(user==undefined)
-	{
-		user ={};
-	}
-    var firsttimekey = "";//rand.generate(7);
-    user.passwd = firsttimekey;
-    console.log('Adding place: ' + JSON.stringify(user));
+	MongoClient.connect(connectionString, function(err, db) {
+		db.collection('users', function (err, collection) {
 
-   // var userdetails =db.getUser(name);
-   // console.log(userdetails);
-    /*
-     db.collection('users', function (err, collection) {
-     collection.insert(user, {safe: true}, function (err, result) {
-     if (err)
-     {
-     res.send({'error': 'An error has occurred'});
-     } else
-     {
+			var user = req.body.name;
+			var pass = req.body.password;
+			if (user != undefined) {
+				//	}
+				var firsttimekey = "";//rand.generate(7);
+				user.passwd = firsttimekey;
+				console.log('fetching user details : ' + JSON.stringify(user));
+				collection.find({"name":user}).toArray(function (err, items) {
+					var record = items[0];
+					if(err)
+					{
+						res.sendStatus(500);
+					}
+					else if(record.length<=0)
+					{
+						res.sendStatus(200).send("invalid user");
+					}
+					else if(record.length>0 && record.password != undefined && record.password != pass)
+					{
+						res.sendStatus(200).send("invalid password");
+					}
+					else if(record!= undefined && record.password!= undefined && record.password == pass)
 
-     Sms.SendMessage(firsttimekey);
-     console.log('Success: ' + JSON.stringify(result[0]));
+					res.sendStatus(200).send(record);
+				});
+				// var userdetails =db.getUser(name);
+				// console.log(userdetails);
+				/*
+				 db.collection('users', function (err, collection) {
+				 collection.insert(user, {safe: true}, function (err, result) {
+				 if (err)
+				 {
+				 res.send({'error': 'An error has occurred'});
+				 } else
+				 {
 
-     }
-     });
-     });
-     */
+				 Sms.SendMessage(firsttimekey);
+				 console.log('Success: ' + JSON.stringify(result[0]));
+
+				 }
+				 });
+				 });
+				 */
+			}
+		});
+	});
 }
 var mapFunction = function() {
     for (var idx = 0; idx < this.items.length; idx++) {
