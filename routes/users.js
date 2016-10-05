@@ -26,9 +26,9 @@ var forecast = new Forecast({
 	}
 });
 
-//var connectionString = 'mongodb://root:Vjy4livelytrips@192.169.149.245:27017/placesDB?authSource=admin';
+var connectionString = 'mongodb://root:Vjy4livelytrips@192.169.149.245:27017/placesDB?authSource=admin';
 
-var connectionString = 'mongodb://localhost:27017/placesDB';
+//var connectionString = 'mongodb://localhost:27017/placesDB';
 var db = mongojs(connectionString);
 
 

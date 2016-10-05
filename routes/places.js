@@ -40,6 +40,7 @@ var MongoClient = require('mongodb').MongoClient
 // Use connect method to connect to the Server
 MongoClient.connect(connectionString, function(err, db) {
 	assert.equal(null, err);
+    console.log("url:"+connectionString);
 	console.log("Connected correctly to server");
 
 	//db.close();
@@ -187,6 +188,10 @@ function BuildSuggestionListByType(Arr_places, currentplace) {
 
 exports.GetDataForHomePage = function (req, res) {
     console.log('Retrieving all from scrollimages: ');
+    MongoClient.connect(connectionString, function(err, db) {
+    	debugger;
+    	if(db!= null)
+		{
     Async.parallel([
         function(callback) {
             db.collection('places').find().limit(8).toArray(function (e, docs) {
@@ -295,43 +300,51 @@ exports.GetDataForHomePage = function (req, res) {
      //       response.events = results[2] || [];
             return res.send(200, response);
         });
+		}
+});
 }
 
 exports.GetHomePageDataObject = function () {
-    db.collection('places').find().sort('type').toArray(function (e, docs) {
-        var resultSet = [];
-        db.collection('placeLocationIDLookup').ensureIndex({loc: '2dsphere'}, function (error) {
-            if (error) {
-            }
-            docs.forEach(function (doc) {
-                db.collection('placeLocationIDLookup').find({
-                    location: {
-                        $near: {
-                            $geometry: {
-                                type: "Point",
-                                coordinates: [parseFloat(doc.longitude), parseFloat(doc.latitude)]
-                            }
-                            // $maxDistance : <distance in meters>
-                        }
-                    }
-                }).toArray(function (err, nearbyplace) {
-                    if (err) return console.dir(err)
-                    {
-                      //  doc.Scrollimages = [];//GetFileInsideFolderByName("C:\\inetpub\\wwwroot\\Tourist\\images\\", doc.name);
-                        doc.nearbylocation = BuildNearbyPlacesList(nearbyplace, doc);
-                        doc.suggestions = BuildSuggestionListByType(docs, doc);
-                        doc.timings = doc.timings.split('.');
-                        doc.landmark = doc.landmark.split('.');
-                        resultSet.push(doc);
-                        if (docs.length == resultSet.length) {
-                            res.send(resultSet);
-                        }
-                    }
-                });
+	console.log('Retrieving all from scrollimages: ');
+	MongoClient.connect(connectionString, function(err, db) {
+		debugger;
+		if (db != null) {
+			db.collection('places').find().sort('type').toArray(function (e, docs) {
+				var resultSet = [];
+				db.collection('placeLocationIDLookup').ensureIndex({loc: '2dsphere'}, function (error) {
+					if (error) {
+					}
+					docs.forEach(function (doc) {
+						db.collection('placeLocationIDLookup').find({
+							location: {
+								$near: {
+									$geometry: {
+										type: "Point",
+										coordinates: [parseFloat(doc.longitude), parseFloat(doc.latitude)]
+									}
+									// $maxDistance : <distance in meters>
+								}
+							}
+						}).toArray(function (err, nearbyplace) {
+							if (err) return console.dir(err)
+							{
+								//  doc.Scrollimages = [];//GetFileInsideFolderByName("C:\\inetpub\\wwwroot\\Tourist\\images\\", doc.name);
+								doc.nearbylocation = BuildNearbyPlacesList(nearbyplace, doc);
+								doc.suggestions = BuildSuggestionListByType(docs, doc);
+								doc.timings = doc.timings.split('.');
+								doc.landmark = doc.landmark.split('.');
+								resultSet.push(doc);
+								if (docs.length == resultSet.length) {
+									res.send(resultSet);
+								}
+							}
+						});
 
-            });
-        });
-    });
+					});
+				});
+			});
+		}
+	});
 }
 
 /*
@@ -343,199 +356,204 @@ exports.addPlace = function (req, res) {
 		console.log("Connected correctly to server");
 
 		//db.close();
+		if (db != null) {
+			var place = req.body.postdata;
+			place.displaypicture = place.image;
+			console.log('Adding place: ' + JSON.stringify(place));
+			place.season = 'summer';
+			if (place.type == "standalone")
+				db.collection('places', function (err, collection) {
+					console.log('connected to database: ');
+					collection.insert(place, {safe: true}, function (err, result) {
+						if (err) {
+							res.send({'error': 'An error has occurred'});
+							console.log('place insertion failed: ');
+						} else {
 
-    var place = req.body.postdata;
-    place.displaypicture = place.image;
-    console.log('Adding place: ' + JSON.stringify(place));
-    place.season='summer';
-    if (place.type == "standalone")
-        db.collection('places', function (err, collection) {
-			console.log('connected to database: ');
-            collection.insert(place, {safe: true}, function (err, result) {
-                if (err) {
-                    res.send({'error': 'An error has occurred'});
-					console.log('place insertion failed: ');
-                } else {
+							console.log('Success: ' + JSON.stringify(result[0]));
+							var locationObj = {};
+							locationObj.placeid = place._id.toString();
+							locationObj.placename = place.name;
+							locationObj.type = place.type;
+							locationObj.displaypicture = place.displaypicture[0];
+							locationObj.location = {};
+							locationObj.location.type = "Point";
+							locationObj.location.coordinates = [parseFloat(place.longitude), parseFloat(place.latitude)];
+						}
+						var locationCollection = db.collection('placeLocationIDLookup');
+						//locationCollection.createIndex({ loc: "2dsphere" }, { min: -500, max: 500, w: 1 }, function (err, result) {
+						locationCollection.ensureIndex({"location": "2dsphere"}, function (err, result) {
+							if (err) return console.dir(err);
+							locationCollection.insert(locationObj, {w: 1}, function (err, result) {
+								if (err) return console.dir(err)
+							});
+						});
+						var SeasonCollection = db.collection('SeasonLookup');
+						if (!(place.season.indexOf(',') > -1)) {
+							place.season = place.season + ',';
+						}
+						place.season.split(',').forEach(UpdateMonthlySeasonalList);
+						function UpdateMonthlySeasonalList(element, index, array) {
+							console.log('a[' + index + '] = ' + element);
+							element = parseInt(element);
+							if (element != -1 && element != undefined) {
+								SeasonCollection.update({_Monthid: element},
+									{$addToSet: {MonthlyPlaces: place._id.toString()}},
+									{w: 1, upsert: true},
+									function (err, result) {
+										if (err) return console.dir(err);
+									});
+							}
+						}
+					});
+				});
+			if (place.type == "hotel")
+				db.collection('hotels', function (err, collection) {
+					collection.insert(place, {safe: true}, function (err, result) {
+						if (err) {
+							res.send({'error': 'An error has occurred'});
+						} else {
+							/*
+							 console.log('Success: ' + JSON.stringify(result[0]));
+							 var locationObj = {};
+							 locationObj.placeid = place._id.toString();
+							 locationObj.placename = place.name;
+							 locationObj.displaypicture = place.displaypicture;
+							 locationObj.type = place.type;
+							 locationObj.location = {};
+							 locationObj.location.type = "Point";
+							 locationObj.location.coordinates = [parseFloat(place.longitude), parseFloat(place.latitude)];
+							 */
+						}
+						/*
+						 var locationCollection = db.collection('placeLocationIDLookup');
+						 //locationCollection.createIndex({ loc: "2dsphere" }, { min: -500, max: 500, w: 1 }, function (err, result) {
+						 locationCollection.ensureIndex({"location": "2dsphere"}, function (err, result) {
+						 if (err) return console.dir(err);
+						 locationCollection.insert(locationObj, {w: 1}, function (err, result) {
+						 if (err) return console.dir(err)
+						 });
+						 });
+						 */
+						/*
+						 var SeasonCollection = db.collection('SeasonLookup');
+						 if (!(place.season.indexOf(',') > -1)) {
+						 place.season = place.season + ',';
+						 }
+						 place.season.split(',').forEach(UpdateMonthlySeasonalList);
+						 function UpdateMonthlySeasonalList(element, index, array) {
+						 console.log('a[' + index + '] = ' + element);
+						 element = parseInt(element);
+						 if (element != -1 && element != undefined) {
+						 SeasonCollection.update({_Monthid: element},
+						 {$addToSet: {MonthlyPlaces: place._id.toString()}},
+						 {w: 1, upsert: true},
+						 function (err, result) {
+						 if (err) return console.dir(err);
+						 });
+						 }
+						 }
+						 */
+					});
+				});
+			if (place.type == "package")
+				db.collection('packages', function (err, collection) {
+					collection.insert(place, {safe: true}, function (err, result) {
+						if (err) {
+							res.send({'error': 'An error has occurred'});
+						} else {
+							/*
+							 var imagelist =[];
+							 for(var i=0;i<place.products.length;i++)
+							 {
+							 imagelist.push(place.products[i].image);
+							 }
+							 console.log('Success: ' + JSON.stringify(result[0]));
+							 var locationObj = {};
+							 locationObj.placeid = place._id.toString();
+							 locationObj.placename = place.name;
+							 locationObj.displaypicture = imagelist;
+							 locationObj.location = {};
+							 locationObj.location.type = "Point";
+							 locationObj.location.coordinates = [parseFloat(place.longitude), parseFloat(place.latitude)];
+							 */
+						}
+						/*
+						 var locationCollection = db.collection('placeLocationIDLookup');
+						 //locationCollection.createIndex({ loc: "2dsphere" }, { min: -500, max: 500, w: 1 }, function (err, result) {
+						 locationCollection.ensureIndex({"location": "2dsphere"}, function (err, result) {
+						 if (err) return console.dir(err);
+						 locationCollection.insert(locationObj, {w: 1}, function (err, result) {
+						 if (err) return console.dir(err)
+						 });
+						 });
 
-                    console.log('Success: ' + JSON.stringify(result[0]));
-                    var locationObj = {};
-                    locationObj.placeid = place._id.toString();
-                    locationObj.placename = place.name;
-                    locationObj.type = place.type;
-                    locationObj.displaypicture = place.displaypicture[0];
-                    locationObj.location = {};
-                    locationObj.location.type = "Point";
-                    locationObj.location.coordinates = [parseFloat(place.longitude), parseFloat(place.latitude)];
-                }
-                var locationCollection = db.collection('placeLocationIDLookup');
-                //locationCollection.createIndex({ loc: "2dsphere" }, { min: -500, max: 500, w: 1 }, function (err, result) {
-                locationCollection.ensureIndex({"location": "2dsphere"}, function (err, result) {
-                    if (err) return console.dir(err);
-                    locationCollection.insert(locationObj, {w: 1}, function (err, result) {
-                        if (err) return console.dir(err)
-                    });
-                });
-                var SeasonCollection = db.collection('SeasonLookup');
-                if (!(place.season.indexOf(',') > -1)) {
-                    place.season = place.season + ',';
-                }
-                place.season.split(',').forEach(UpdateMonthlySeasonalList);
-                function UpdateMonthlySeasonalList(element, index, array) {
-                    console.log('a[' + index + '] = ' + element);
-                    element = parseInt(element);
-                    if (element != -1 && element != undefined) {
-                        SeasonCollection.update({_Monthid: element},
-                            {$addToSet: {MonthlyPlaces: place._id.toString()}},
-                            {w: 1, upsert: true},
-                            function (err, result) {
-                                if (err) return console.dir(err);
-                            });
-                    }
-                }
-            });
-        });
-    if (place.type == "hotel")
-        db.collection('hotels', function (err, collection) {
-            collection.insert(place, {safe: true}, function (err, result) {
-                if (err) {
-                    res.send({'error': 'An error has occurred'});
-                } else {
-                    /*
-                    console.log('Success: ' + JSON.stringify(result[0]));
-                    var locationObj = {};
-                    locationObj.placeid = place._id.toString();
-                    locationObj.placename = place.name;
-                    locationObj.displaypicture = place.displaypicture;
-                    locationObj.type = place.type;
-                    locationObj.location = {};
-                    locationObj.location.type = "Point";
-                    locationObj.location.coordinates = [parseFloat(place.longitude), parseFloat(place.latitude)];
-*/
-                }
-                /*
-                var locationCollection = db.collection('placeLocationIDLookup');
-                //locationCollection.createIndex({ loc: "2dsphere" }, { min: -500, max: 500, w: 1 }, function (err, result) {
-                locationCollection.ensureIndex({"location": "2dsphere"}, function (err, result) {
-                    if (err) return console.dir(err);
-                    locationCollection.insert(locationObj, {w: 1}, function (err, result) {
-                        if (err) return console.dir(err)
-                    });
-                });
-                */
-                /*
-                var SeasonCollection = db.collection('SeasonLookup');
-                if (!(place.season.indexOf(',') > -1)) {
-                    place.season = place.season + ',';
-                }
-                place.season.split(',').forEach(UpdateMonthlySeasonalList);
-                function UpdateMonthlySeasonalList(element, index, array) {
-                    console.log('a[' + index + '] = ' + element);
-                    element = parseInt(element);
-                    if (element != -1 && element != undefined) {
-                        SeasonCollection.update({_Monthid: element},
-                            {$addToSet: {MonthlyPlaces: place._id.toString()}},
-                            {w: 1, upsert: true},
-                            function (err, result) {
-                                if (err) return console.dir(err);
-                            });
-                    }
-                }
-                */
-            });
-        });
-    if (place.type == "package")
-        db.collection('packages', function (err, collection) {
-            collection.insert(place, {safe: true}, function (err, result) {
-                if (err) {
-                    res.send({'error': 'An error has occurred'});
-                } else {
-                    /*
-                    var imagelist =[];
-                    for(var i=0;i<place.products.length;i++)
-                    {
-                        imagelist.push(place.products[i].image);
-                    }
-                    console.log('Success: ' + JSON.stringify(result[0]));
-                    var locationObj = {};
-                    locationObj.placeid = place._id.toString();
-                    locationObj.placename = place.name;
-                    locationObj.displaypicture = imagelist;
-                    locationObj.location = {};
-                    locationObj.location.type = "Point";
-                    locationObj.location.coordinates = [parseFloat(place.longitude), parseFloat(place.latitude)];
-                    */
-                }
-                /*
-                var locationCollection = db.collection('placeLocationIDLookup');
-                //locationCollection.createIndex({ loc: "2dsphere" }, { min: -500, max: 500, w: 1 }, function (err, result) {
-                locationCollection.ensureIndex({"location": "2dsphere"}, function (err, result) {
-                    if (err) return console.dir(err);
-                    locationCollection.insert(locationObj, {w: 1}, function (err, result) {
-                        if (err) return console.dir(err)
-                    });
-                });
-
-                var SeasonCollection = db.collection('SeasonLookup');
-                if (!(place.season.indexOf(',') > -1)) {
-                    place.season = place.season + ',';
-                }
-                place.season.split(',').forEach(UpdateMonthlySeasonalList);
-                function UpdateMonthlySeasonalList(element, index, array) {
-                    console.log('a[' + index + '] = ' + element);
-                    element = parseInt(element);
-                    if (element != -1 && element != undefined) {
-                        SeasonCollection.update({_Monthid: element},
-                            {$addToSet: {MonthlyPlaces: place._id.toString()}},
-                            {w: 1, upsert: true},
-                            function (err, result) {
-                                if (err) return console.dir(err);
-                            });
-                    }
-                }
-                */
-            });
-        });
+						 var SeasonCollection = db.collection('SeasonLookup');
+						 if (!(place.season.indexOf(',') > -1)) {
+						 place.season = place.season + ',';
+						 }
+						 place.season.split(',').forEach(UpdateMonthlySeasonalList);
+						 function UpdateMonthlySeasonalList(element, index, array) {
+						 console.log('a[' + index + '] = ' + element);
+						 element = parseInt(element);
+						 if (element != -1 && element != undefined) {
+						 SeasonCollection.update({_Monthid: element},
+						 {$addToSet: {MonthlyPlaces: place._id.toString()}},
+						 {w: 1, upsert: true},
+						 function (err, result) {
+						 if (err) return console.dir(err);
+						 });
+						 }
+						 }
+						 */
+					});
+				});
+		}
 	});
 }
 exports.updatePlace = function (req, res) {
 	MongoClient.connect(connectionString, function(err, db) {
 		assert.equal(null, err);
 		console.log("Connected correctly to server");
-		var id = req.params.id;
-		var place = req.body;
-		delete place._id;
-		console.log('Updating place: ' + id);
-		console.log(JSON.stringify(place));
-		db.collection('places', function (err, collection) {
-			collection.update({'_id': new BSON.ObjectID(id)}, place, {safe: true}, function (err, result) {
-				if (err) {
-					console.log('Error updating place: ' + err);
-					res.send({'error': 'An error has occurred'});
-				} else {
-					console.log('' + result + ' document(s) updated');
-					res.send(place);
-				}
+		if (db != null) {
+			var id = req.params.id;
+			var place = req.body;
+			delete place._id;
+			console.log('Updating place: ' + id);
+			console.log(JSON.stringify(place));
+			db.collection('places', function (err, collection) {
+				collection.update({'_id': new BSON.ObjectID(id)}, place, {safe: true}, function (err, result) {
+					if (err) {
+						console.log('Error updating place: ' + err);
+						res.send({'error': 'An error has occurred'});
+					} else {
+						console.log('' + result + ' document(s) updated');
+						res.send(place);
+					}
+				});
 			});
-		});
+		}
 	});
 }
 
 exports.deletePlace = function (req, res) {
 	MongoClient.connect(connectionString, function(err, db) {
 		assert.equal(null, err);
-		console.log("Connected correctly to server");
-		var id = req.params.id;
-		console.log('Deleting place: ' + id);
-		db.collection('places', function (err, collection) {
-			collection.remove({'_id': new BSON.ObjectID(id)}, {safe: true}, function (err, result) {
-				if (err) {
-					res.send({'error': 'An error has occurred - ' + err});
-				} else {
-					console.log('' + result + ' document(s) deleted');
-					res.send(req.body);
-				}
+		if (db != null) {
+			console.log("Connected correctly to server");
+			var id = req.params.id;
+			console.log('Deleting place: ' + id);
+			db.collection('places', function (err, collection) {
+				collection.remove({'_id': new BSON.ObjectID(id)}, {safe: true}, function (err, result) {
+					if (err) {
+						res.send({'error': 'An error has occurred - ' + err});
+					} else {
+						console.log('' + result + ' document(s) deleted');
+						res.send(req.body);
+					}
+				});
 			});
-		});
+		}
 	});
 }
 
@@ -571,66 +589,70 @@ exports.GetCategories = function (req, res) {
 exports.GetPlacesByCategoryId = function (req, res) {
 	MongoClient.connect(connectionString, function(err, db) {
 		assert.equal(null, err);
-		console.log("Connected correctly to server");
-		var id = req.params.id;
-		var type = req.params.type;
-		latitude = req.params.lat;
-		longitude = req.params.long;
-		console.log('inside GetPlacesByCategoryId: with request:', id);
-		db.collection('placeLocationIDLookup', function (err, collection) {
-			collection.distinct('placeid',
-				{
-					location: {
-						$near: {
-							$geometry: {
-								type: "Point",
-								coordinates: [parseFloat(longitude), parseFloat(latitude)]
-							}
-							// $maxDistance : <distance in meters>
-						}
-					},
-					type: type
-				},
-				function (err, nearbyplace) {
-					if (err) return console.dir(err)
+		if (db != null) {
+			console.log("Connected correctly to server");
+			var id = req.params.id;
+			var type = req.params.type;
+			latitude = req.params.lat;
+			longitude = req.params.long;
+			console.log('inside GetPlacesByCategoryId: with request:', id);
+			db.collection('placeLocationIDLookup', function (err, collection) {
+				collection.distinct('placeid',
 					{
-						BuildPlacesFromPlaceIds(nearbyplace, type);
-					}
-				});
-		});
+						location: {
+							$near: {
+								$geometry: {
+									type: "Point",
+									coordinates: [parseFloat(longitude), parseFloat(latitude)]
+								}
+								// $maxDistance : <distance in meters>
+							}
+						},
+						type: type
+					},
+					function (err, nearbyplace) {
+						if (err) return console.dir(err)
+						{
+							BuildPlacesFromPlaceIds(nearbyplace, type);
+						}
+					});
+			});
+		}
 	});
 }
 
 exports.getTypeAheadPlaceNames = function (req, res) {
 	MongoClient.connect(connectionString, function(err, db) {
-		assert.equal(null, err);
-		console.log("Connected correctly to server");
-		var b = req.params.search;
-		console.log('Retrieving all from scrollimages: ');
-		db.collection('places', function (err, collection) {
-			console.log("inside db count:");
-			//
-			var arr = [];
-			collection.find({$or: [{name: new RegExp(b, 'i')}, {city: new RegExp(b, 'i')}]}).limit(5).toArray(function (err, items) {
-				for (var s = 0; s < items.length; s++) {
-					console.log("homepage items received from node: count:" + items[s].name);
-					var sr = {};
-					if (items[s].name.indexOf(b) > -1) {
-						sr.name = items[s].name;
+		if (db != null) {
+			assert.equal(null, err);
+			console.log("Connected correctly to server");
+			var b = req.params.search;
+			console.log('Retrieving all from scrollimages: ');
+			db.collection('places', function (err, collection) {
+				console.log("inside db count:");
+				//
+				var arr = [];
+				collection.find({$or: [{name: new RegExp(b, 'i')}, {city: new RegExp(b, 'i')}]}).limit(5).toArray(function (err, items) {
+					for (var s = 0; s < items.length; s++) {
+						console.log("homepage items received from node: count:" + items[s].name);
+						var sr = {};
+						if (items[s].name.indexOf(b) > -1) {
+							sr.name = items[s].name;
+						}
+						else {
+							sr.name = items[s].city;
+						}
+						sr.value = items[s]._id;
+						sr.image = items[s].image[0];
+						sr.latitude = items[s].latitude;
+						sr.longitude = items[s].longitude;
+						arr.push(sr);
 					}
-					else {
-						sr.name = items[s].city;
-					}
-					sr.value = items[s]._id;
-					sr.image = items[s].image[0];
-					sr.latitude = items[s].latitude;
-					sr.longitude = items[s].longitude;
-					arr.push(sr);
-				}
-				res.send(arr);
-				console.log("homepage items received from node: count:" + arr);
+					res.send(arr);
+					console.log("homepage items received from node: count:" + arr);
+				});
 			});
-		});
+		}
 	});
 };
 
@@ -700,28 +722,30 @@ function loadWeather(latitude, longitude) {
 exports.GetRecommendationsForSeason = function (req, res) {
     try {
 		MongoClient.connect(connectionString, function(err, db) {
-			assert.equal(null, err);
-			console.log("Connected correctly to server");
-			console.log("recommendations called");
-			if (req.body != undefined) {
-				var monthid = 1;
-				var findqry = DecisionEngine(req.body);  // findqry
-				// var input = JSON.parse(findqry);
-				var placetype = 'standalone';
-				if (findqry.type != undefined && findqry.type == 'package') {
-					//  placetype = 'package';
-				}
-				db.collection('SeasonLookup').find(findqry).sort('type').toArray(function (e, docs) {
-					if (placetype == 'package') {
-						BuildPlacesFromPlaceIds(docs[0]._id.toString(), placetype, res);
+			if (db != null) {
+				assert.equal(null, err);
+				console.log("Connected correctly to server");
+				console.log("recommendations called");
+				if (req.body != undefined) {
+					var monthid = 1;
+					var findqry = DecisionEngine(req.body);  // findqry
+					// var input = JSON.parse(findqry);
+					var placetype = 'standalone';
+					if (findqry.type != undefined && findqry.type == 'package') {
+						//  placetype = 'package';
 					}
-					if (docs != undefined && docs.length > 0) {
-						var resp = BuildPlacesFromPlaceIds(docs[0].MonthlyPlaces, placetype, res);
-					}
+					db.collection('SeasonLookup').find(findqry).sort('type').toArray(function (e, docs) {
+						if (placetype == 'package') {
+							BuildPlacesFromPlaceIds(docs[0]._id.toString(), placetype, res);
+						}
+						if (docs != undefined && docs.length > 0) {
+							var resp = BuildPlacesFromPlaceIds(docs[0].MonthlyPlaces, placetype, res);
+						}
 
-					//  var jsoneres = JSON.stringify(resp);
-					//  res.send(resp);
-				});
+						//  var jsoneres = JSON.stringify(resp);
+						//  res.send(resp);
+					});
+				}
 			}
 		});
     }
@@ -757,126 +781,128 @@ exports.GetRecommendations = function (req, res) {
     try {
 		MongoClient.connect(connectionString, function(err, db) {
 			assert.equal(null, err);
-			console.log("Connected correctly to server");
-			console.log("recommendations called");
-			if (req.body != undefined) {
-				var monthid = 1;
-				var findqry = DecisionEngine(req.body);  // findqry
-				// var input = JSON.parse(findqry);
-				var placetype = 'standalone';
-				if (findqry.type != undefined && findqry.type == 'package') {
-					placetype = 'package';
-				}
-				if (placetype == 'package') {
-					console.log('fetching details for placeids: from places collection.');
-					if (placetype == "" || placetype == "standalone")
-						db.collection('places').find(findqry).sort('type').toArray(function (e, docs) {
-							var resultSet = [];
-							db.collection('placeLocationIDLookup').ensureIndex({loc: '2dsphere'}, function (error) {
-								if (error) {
-								}
-								docs.forEach(function (doc) {
-									db.collection('placeLocationIDLookup').find({
-										location: {
-											$near: {
-												$geometry: {
-													type: "Point",
-													coordinates: [parseFloat(doc.longitude), parseFloat(doc.latitude)]
+			if (db != null) {
+				console.log("Connected correctly to server");
+				console.log("recommendations called");
+				if (req.body != undefined) {
+					var monthid = 1;
+					var findqry = DecisionEngine(req.body);  // findqry
+					// var input = JSON.parse(findqry);
+					var placetype = 'standalone';
+					if (findqry.type != undefined && findqry.type == 'package') {
+						placetype = 'package';
+					}
+					if (placetype == 'package') {
+						console.log('fetching details for placeids: from places collection.');
+						if (placetype == "" || placetype == "standalone")
+							db.collection('places').find(findqry).sort('type').toArray(function (e, docs) {
+								var resultSet = [];
+								db.collection('placeLocationIDLookup').ensureIndex({loc: '2dsphere'}, function (error) {
+									if (error) {
+									}
+									docs.forEach(function (doc) {
+										db.collection('placeLocationIDLookup').find({
+											location: {
+												$near: {
+													$geometry: {
+														type: "Point",
+														coordinates: [parseFloat(doc.longitude), parseFloat(doc.latitude)]
+													}
+													// $maxDistance : <distance in meters>
 												}
-												// $maxDistance : <distance in meters>
 											}
-										}
-									}).toArray(function (err, nearbyplace) {
-										if (err) return console.dir(err)
-										{
-											// doc.Scrollimages = GetFileInsideFolderByName("C:\\inetpub\\wwwroot\\Tourist\\images\\", doc.name);
-											doc.nearbylocation = BuildNearbyPlacesList(nearbyplace, doc);
-											doc.suggestions = BuildSuggestionListByType(docs, doc);
-											doc.timings = doc.timings.split('.');
-											doc.landmark = doc.landmark.split('.');
-											resultSet.push(doc);
-											if (docs.length == resultSet.length) {
-												res.send(JSON.stringify(resultSet));
-												// return resultSet;
+										}).toArray(function (err, nearbyplace) {
+											if (err) return console.dir(err)
+											{
+												// doc.Scrollimages = GetFileInsideFolderByName("C:\\inetpub\\wwwroot\\Tourist\\images\\", doc.name);
+												doc.nearbylocation = BuildNearbyPlacesList(nearbyplace, doc);
+												doc.suggestions = BuildSuggestionListByType(docs, doc);
+												doc.timings = doc.timings.split('.');
+												doc.landmark = doc.landmark.split('.');
+												resultSet.push(doc);
+												if (docs.length == resultSet.length) {
+													res.send(JSON.stringify(resultSet));
+													// return resultSet;
+												}
 											}
-										}
-									});
+										});
 
+									});
 								});
 							});
-						});
-					else if (placetype == "hotel")
-						db.collection('hotels').find(findqry).sort('type').toArray(function (e, docs) {
-							var resultSet = [];
-							db.collection('placeLocationIDLookup').ensureIndex({loc: '2dsphere'}, function (error) {
-								if (error) {
-								}
-								docs.forEach(function (doc) {
-									db.collection('placeLocationIDLookup').find({
-										location: {
-											$near: {
-												$geometry: {
-													type: "Point",
-													coordinates: [parseFloat(doc.longitude), parseFloat(doc.latitude)]
+						else if (placetype == "hotel")
+							db.collection('hotels').find(findqry).sort('type').toArray(function (e, docs) {
+								var resultSet = [];
+								db.collection('placeLocationIDLookup').ensureIndex({loc: '2dsphere'}, function (error) {
+									if (error) {
+									}
+									docs.forEach(function (doc) {
+										db.collection('placeLocationIDLookup').find({
+											location: {
+												$near: {
+													$geometry: {
+														type: "Point",
+														coordinates: [parseFloat(doc.longitude), parseFloat(doc.latitude)]
+													}
+													// $maxDistance : <distance in meters>
 												}
-												// $maxDistance : <distance in meters>
 											}
-										}
-									}).toArray(function (err, nearbyplace) {
-										if (err) return console.dir(err)
-										{
-											//  doc.Scrollimages = GetFileInsideFolderByName("C:\\inetpub\\wwwroot\\Tourist\\images\\", doc.name);
-											doc.nearbylocation = BuildNearbyPlacesList(nearbyplace, doc);
-											doc.suggestions = BuildSuggestionListByType(docs, doc);
-											doc.timings = doc.timings.split('.');
-											doc.landmark = doc.landmark.split('.');
-											resultSet.push(doc);
-											if (docs.length == resultSet.length) {
-												//res.send(resultSet);
-												return resultSet;
+										}).toArray(function (err, nearbyplace) {
+											if (err) return console.dir(err)
+											{
+												//  doc.Scrollimages = GetFileInsideFolderByName("C:\\inetpub\\wwwroot\\Tourist\\images\\", doc.name);
+												doc.nearbylocation = BuildNearbyPlacesList(nearbyplace, doc);
+												doc.suggestions = BuildSuggestionListByType(docs, doc);
+												doc.timings = doc.timings.split('.');
+												doc.landmark = doc.landmark.split('.');
+												resultSet.push(doc);
+												if (docs.length == resultSet.length) {
+													//res.send(resultSet);
+													return resultSet;
+												}
 											}
-										}
-									});
+										});
 
+									});
 								});
 							});
-						});
-					else if (placetype == "package")
-						db.collection('packages').find(findqry).sort('type').toArray(function (e, docs) {
-							var resultSet = [];
-							db.collection('placeLocationIDLookup').ensureIndex({loc: '2dsphere'}, function (error) {
-								if (error) {
-								}
-								docs.forEach(function (doc) {
-									db.collection('placeLocationIDLookup').find({
-										location: {
-											$near: {
-												$geometry: {
-													type: "Point",
-													coordinates: [parseFloat(doc.longitude), parseFloat(doc.latitude)]
+						else if (placetype == "package")
+							db.collection('packages').find(findqry).sort('type').toArray(function (e, docs) {
+								var resultSet = [];
+								db.collection('placeLocationIDLookup').ensureIndex({loc: '2dsphere'}, function (error) {
+									if (error) {
+									}
+									docs.forEach(function (doc) {
+										db.collection('placeLocationIDLookup').find({
+											location: {
+												$near: {
+													$geometry: {
+														type: "Point",
+														coordinates: [parseFloat(doc.longitude), parseFloat(doc.latitude)]
+													}
+													// $maxDistance : <distance in meters>
 												}
-												// $maxDistance : <distance in meters>
 											}
-										}
-									}).toArray(function (err, nearbyplace) {
-										if (err) return console.dir(err)
-										{
-											//  doc.Scrollimages = GetFileInsideFolderByName("C:\\inetpub\\wwwroot\\Tourist\\images\\", doc.name);
-											doc.nearbylocation = BuildNearbyPlacesList(nearbyplace, doc);
-											doc.suggestions = BuildSuggestionListByType(docs, doc);
-											//  doc.timings = doc.timings.split('.');
-											doc.landmark = doc.landmark.split('.');
-											resultSet.push(doc);
-											if (docs.length == resultSet.length) {
-												res.send(resultSet);
-												//  return resultSet;
+										}).toArray(function (err, nearbyplace) {
+											if (err) return console.dir(err)
+											{
+												//  doc.Scrollimages = GetFileInsideFolderByName("C:\\inetpub\\wwwroot\\Tourist\\images\\", doc.name);
+												doc.nearbylocation = BuildNearbyPlacesList(nearbyplace, doc);
+												doc.suggestions = BuildSuggestionListByType(docs, doc);
+												//  doc.timings = doc.timings.split('.');
+												doc.landmark = doc.landmark.split('.');
+												resultSet.push(doc);
+												if (docs.length == resultSet.length) {
+													res.send(resultSet);
+													//  return resultSet;
+												}
 											}
-										}
-									});
+										});
 
+									});
 								});
 							});
-						});
+					}
 				}
 			}
 		});
@@ -902,145 +928,14 @@ function BuildPlacesFromPlaceIds(placeids, type, res) {
     try {
 		MongoClient.connect(connectionString, function(err, db) {
 			assert.equal(null, err);
-			console.log("Connected correctly to server");
-			var findarray = [];
-			for (var i = 0; i < placeids.length; i++) {
-				var findkey = new mongo.ObjectID(placeids[i]);
-				findarray.push(findkey);
-			}
-
-			console.log('fetching details for placeids: ' + placeids + ' from places collection.');
-			if (type == "" || type == "standalone")
-			//    db.collection('places').find({'_id': {$in: findarray}}).sort('type').toArray(function (e, docs) {
-				db.collection('places').find({'_id': {$in: findarray}}).toArray(function (e, docs) {
-					var resultSet = [];
-					db.collection('placeLocationIDLookup').ensureIndex({loc: '2dsphere'}, function (error) {
-						if (error) {
-						}
-						docs.forEach(function (doc) {
-							db.collection('placeLocationIDLookup').find({
-								location: {
-									$near: {
-										$geometry: {
-											type: "Point",
-											coordinates: [parseFloat(doc.longitude), parseFloat(doc.latitude)]
-										}
-										// $maxDistance : <distance in meters>
-									}
-								}
-							}).toArray(function (err, nearbyplace) {
-								if (err) return console.dir(err)
-								{
-									//  doc.Scrollimages = GetFileInsideFolderByName("C:\\inetpub\\wwwroot\\Tourist\\images\\", doc.name);
-									doc.nearbylocation = BuildNearbyPlacesList(nearbyplace, doc);
-									doc.suggestions = BuildSuggestionListByType(docs, doc);
-									//  doc.timings = doc.timings.split('.');
-									doc.landmark = doc.landmark.split('.');
-									resultSet.push(doc);
-									if (docs.length == resultSet.length) {
-										res.send(JSON.stringify(resultSet));
-										// return resultSet;
-									}
-								}
-							});
-
-						});
-					});
-				});
-			else if (type == "hotel")
-				db.collection('hotels').find({'_id': {$in: findarray}}).sort('type').toArray(function (e, docs) {
-					var resultSet = [];
-					db.collection('placeLocationIDLookup').ensureIndex({loc: '2dsphere'}, function (error) {
-						if (error) {
-						}
-						docs.forEach(function (doc) {
-							db.collection('placeLocationIDLookup').find({
-								location: {
-									$near: {
-										$geometry: {
-											type: "Point",
-											coordinates: [parseFloat(doc.longitude), parseFloat(doc.latitude)]
-										}
-										// $maxDistance : <distance in meters>
-									}
-								}
-							}).toArray(function (err, nearbyplace) {
-								if (err) return console.dir(err)
-								{
-									//   doc.Scrollimages = GetFileInsideFolderByName("C:\\inetpub\\wwwroot\\Tourist\\images\\", doc.name);
-									doc.nearbylocation = BuildNearbyPlacesList(nearbyplace, doc);
-									doc.suggestions = BuildSuggestionListByType(docs, doc);
-									doc.timings = doc.timings.split('.');
-									doc.landmark = doc.landmark.split('.');
-									resultSet.push(doc);
-									if (docs.length == resultSet.length) {
-										//res.send(resultSet);
-										return resultSet;
-									}
-								}
-							});
-
-						});
-					});
-				});
-			else if (type == "package")
-				db.collection('packages').find({'_id': {$in: findarray}}).sort('type').toArray(function (e, docs) {
-					var resultSet = [];
-					db.collection('placeLocationIDLookup').ensureIndex({loc: '2dsphere'}, function (error) {
-						if (error) {
-						}
-						docs.forEach(function (doc) {
-							db.collection('placeLocationIDLookup').find({
-								location: {
-									$near: {
-										$geometry: {
-											type: "Point",
-											coordinates: [parseFloat(doc.longitude), parseFloat(doc.latitude)]
-										}
-										// $maxDistance : <distance in meters>
-									}
-								}
-							}).toArray(function (err, nearbyplace) {
-								if (err) return console.dir(err)
-								{
-									//   doc.Scrollimages = GetFileInsideFolderByName("C:\\inetpub\\wwwroot\\Tourist\\images\\", doc.name);
-									doc.nearbylocation = BuildNearbyPlacesList(nearbyplace, doc);
-									doc.suggestions = BuildSuggestionListByType(docs, doc);
-									doc.timings = doc.timings.split('.');
-									doc.landmark = doc.landmark.split('.');
-									resultSet.push(doc);
-									if (docs.length == resultSet.length) {
-										//res.send(resultSet);
-										return resultSet;
-									}
-								}
-							});
-
-						});
-					});
-				});
-		});
-    }
-    catch (x) {
-        debugger;
-    }
-}
-
-
-function BuildPlacesFromPlaceIdForPackage(placeids, type) {
-    try {
-        return new Promise(function(resolve, reject) {
-			MongoClient.connect(connectionString, function (err, db) {
-				assert.equal(null, err);
+			if (db != null) {
 				console.log("Connected correctly to server");
 				var findarray = [];
-				if (placeids[0] == undefined) {
-					resolve("initialload");
-				}
 				for (var i = 0; i < placeids.length; i++) {
 					var findkey = new mongo.ObjectID(placeids[i]);
 					findarray.push(findkey);
 				}
+
 				console.log('fetching details for placeids: ' + placeids + ' from places collection.');
 				if (type == "" || type == "standalone")
 				//    db.collection('places').find({'_id': {$in: findarray}}).sort('type').toArray(function (e, docs) {
@@ -1070,8 +965,8 @@ function BuildPlacesFromPlaceIdForPackage(placeids, type) {
 										doc.landmark = doc.landmark.split('.');
 										resultSet.push(doc);
 										if (docs.length == resultSet.length) {
-											//   res.sendStatus(JSON.stringify(resultSet));
-											resolve(resultSet);
+											res.send(JSON.stringify(resultSet));
+											// return resultSet;
 										}
 									}
 								});
@@ -1107,7 +1002,7 @@ function BuildPlacesFromPlaceIdForPackage(placeids, type) {
 										resultSet.push(doc);
 										if (docs.length == resultSet.length) {
 											//res.send(resultSet);
-											resolve(JSON.stringify(resultSet));
+											return resultSet;
 										}
 									}
 								});
@@ -1143,7 +1038,7 @@ function BuildPlacesFromPlaceIdForPackage(placeids, type) {
 										resultSet.push(doc);
 										if (docs.length == resultSet.length) {
 											//res.send(resultSet);
-											resolve(JSON.stringify(resultSet));
+											return resultSet;
 										}
 									}
 								});
@@ -1151,6 +1046,141 @@ function BuildPlacesFromPlaceIdForPackage(placeids, type) {
 							});
 						});
 					});
+			}
+		});
+    }
+    catch (x) {
+        debugger;
+    }
+}
+
+
+function BuildPlacesFromPlaceIdForPackage(placeids, type) {
+    try {
+        return new Promise(function(resolve, reject) {
+			MongoClient.connect(connectionString, function (err, db) {
+				assert.equal(null, err);
+				if (db != null) {
+					console.log("Connected correctly to server");
+					var findarray = [];
+					if (placeids[0] == undefined) {
+						resolve("initialload");
+					}
+					for (var i = 0; i < placeids.length; i++) {
+						var findkey = new mongo.ObjectID(placeids[i]);
+						findarray.push(findkey);
+					}
+					console.log('fetching details for placeids: ' + placeids + ' from places collection.');
+					if (type == "" || type == "standalone")
+					//    db.collection('places').find({'_id': {$in: findarray}}).sort('type').toArray(function (e, docs) {
+						db.collection('places').find({'_id': {$in: findarray}}).toArray(function (e, docs) {
+							var resultSet = [];
+							db.collection('placeLocationIDLookup').ensureIndex({loc: '2dsphere'}, function (error) {
+								if (error) {
+								}
+								docs.forEach(function (doc) {
+									db.collection('placeLocationIDLookup').find({
+										location: {
+											$near: {
+												$geometry: {
+													type: "Point",
+													coordinates: [parseFloat(doc.longitude), parseFloat(doc.latitude)]
+												}
+												// $maxDistance : <distance in meters>
+											}
+										}
+									}).toArray(function (err, nearbyplace) {
+										if (err) return console.dir(err)
+										{
+											//  doc.Scrollimages = GetFileInsideFolderByName("C:\\inetpub\\wwwroot\\Tourist\\images\\", doc.name);
+											doc.nearbylocation = BuildNearbyPlacesList(nearbyplace, doc);
+											doc.suggestions = BuildSuggestionListByType(docs, doc);
+											//  doc.timings = doc.timings.split('.');
+											doc.landmark = doc.landmark.split('.');
+											resultSet.push(doc);
+											if (docs.length == resultSet.length) {
+												//   res.sendStatus(JSON.stringify(resultSet));
+												resolve(resultSet);
+											}
+										}
+									});
+
+								});
+							});
+						});
+					else if (type == "hotel")
+						db.collection('hotels').find({'_id': {$in: findarray}}).sort('type').toArray(function (e, docs) {
+							var resultSet = [];
+							db.collection('placeLocationIDLookup').ensureIndex({loc: '2dsphere'}, function (error) {
+								if (error) {
+								}
+								docs.forEach(function (doc) {
+									db.collection('placeLocationIDLookup').find({
+										location: {
+											$near: {
+												$geometry: {
+													type: "Point",
+													coordinates: [parseFloat(doc.longitude), parseFloat(doc.latitude)]
+												}
+												// $maxDistance : <distance in meters>
+											}
+										}
+									}).toArray(function (err, nearbyplace) {
+										if (err) return console.dir(err)
+										{
+											//   doc.Scrollimages = GetFileInsideFolderByName("C:\\inetpub\\wwwroot\\Tourist\\images\\", doc.name);
+											doc.nearbylocation = BuildNearbyPlacesList(nearbyplace, doc);
+											doc.suggestions = BuildSuggestionListByType(docs, doc);
+											doc.timings = doc.timings.split('.');
+											doc.landmark = doc.landmark.split('.');
+											resultSet.push(doc);
+											if (docs.length == resultSet.length) {
+												//res.send(resultSet);
+												resolve(JSON.stringify(resultSet));
+											}
+										}
+									});
+
+								});
+							});
+						});
+					else if (type == "package")
+						db.collection('packages').find({'_id': {$in: findarray}}).sort('type').toArray(function (e, docs) {
+							var resultSet = [];
+							db.collection('placeLocationIDLookup').ensureIndex({loc: '2dsphere'}, function (error) {
+								if (error) {
+								}
+								docs.forEach(function (doc) {
+									db.collection('placeLocationIDLookup').find({
+										location: {
+											$near: {
+												$geometry: {
+													type: "Point",
+													coordinates: [parseFloat(doc.longitude), parseFloat(doc.latitude)]
+												}
+												// $maxDistance : <distance in meters>
+											}
+										}
+									}).toArray(function (err, nearbyplace) {
+										if (err) return console.dir(err)
+										{
+											//   doc.Scrollimages = GetFileInsideFolderByName("C:\\inetpub\\wwwroot\\Tourist\\images\\", doc.name);
+											doc.nearbylocation = BuildNearbyPlacesList(nearbyplace, doc);
+											doc.suggestions = BuildSuggestionListByType(docs, doc);
+											doc.timings = doc.timings.split('.');
+											doc.landmark = doc.landmark.split('.');
+											resultSet.push(doc);
+											if (docs.length == resultSet.length) {
+												//res.send(resultSet);
+												resolve(JSON.stringify(resultSet));
+											}
+										}
+									});
+
+								});
+							});
+						});
+				}
 			});
 		});
     }
@@ -1269,139 +1299,142 @@ var deleteFunction =function (table, filterfunction, callback) {
 exports.addPackage = function (req, res) {
 	MongoClient.connect(connectionString, function(err, db) {
 		assert.equal(null, err);
-		console.log("Connected correctly to server");
-		var place = req.body.productIdList;
-		place.displaypicture = req.body.imageList;
-		console.log('Adding package: ' + JSON.stringify(place));
-		if (place.type == "standalone")
-			db.collection('places', function (err, collection) {
-				collection.insert(place, {safe: true}, function (err, result) {
-					if (err) {
-						res.send({'error': 'An error has occurred'});
-					} else {
-						console.log('Success: ' + JSON.stringify(result[0]));
-						var locationObj = {};
-						locationObj.placeid = place._id.toString();
-						locationObj.placename = place.name;
-						locationObj.displaypicture = place.displaypicture[0];
-						locationObj.location = {};
-						locationObj.location.type = "Point";
-						locationObj.location.coordinates = [parseFloat(place.longitude), parseFloat(place.latitude)];
-					}
-					var locationCollection = db.collection('placeLocationIDLookup');
-					//locationCollection.createIndex({ loc: "2dsphere" }, { min: -500, max: 500, w: 1 }, function (err, result) {
-					locationCollection.ensureIndex({"location": "2dsphere"}, function (err, result) {
-						if (err) return console.dir(err);
-						locationCollection.insert(locationObj, {w: 1}, function (err, result) {
-							if (err) return console.dir(err)
-						});
-					});
-					var SeasonCollection = db.collection('SeasonLookup');
-					if (!(place.season.indexOf(',') > -1)) {
-						place.season = place.season + ',';
-					}
-					place.season.split(',').forEach(UpdateMonthlySeasonalList);
-					function UpdateMonthlySeasonalList(element, index, array) {
-						console.log('a[' + index + '] = ' + element);
-						element = parseInt(element);
-						if (element != -1 && element != undefined) {
-							SeasonCollection.update({_Monthid: element},
-								{$addToSet: {MonthlyPlaces: place._id.toString()}},
-								{w: 1, upsert: true},
-								function (err, result) {
-									if (err) return console.dir(err);
-								});
+		if (db != null) {
+			console.log("Connected correctly to server");
+			var place = req.body.productIdList;
+			place.displaypicture = req.body.imageList;
+			console.log('Adding package: ' + JSON.stringify(place));
+			if (place.type == "standalone")
+				db.collection('places', function (err, collection) {
+					collection.insert(place, {safe: true}, function (err, result) {
+						if (err) {
+							res.send({'error': 'An error has occurred'});
+						} else {
+							console.log('Success: ' + JSON.stringify(result[0]));
+							var locationObj = {};
+							locationObj.placeid = place._id.toString();
+							locationObj.placename = place.name;
+							locationObj.displaypicture = place.displaypicture[0];
+							locationObj.location = {};
+							locationObj.location.type = "Point";
+							locationObj.location.coordinates = [parseFloat(place.longitude), parseFloat(place.latitude)];
 						}
-					}
+						var locationCollection = db.collection('placeLocationIDLookup');
+						//locationCollection.createIndex({ loc: "2dsphere" }, { min: -500, max: 500, w: 1 }, function (err, result) {
+						locationCollection.ensureIndex({"location": "2dsphere"}, function (err, result) {
+							if (err) return console.dir(err);
+							locationCollection.insert(locationObj, {w: 1}, function (err, result) {
+								if (err) return console.dir(err)
+							});
+						});
+						var SeasonCollection = db.collection('SeasonLookup');
+						if (!(place.season.indexOf(',') > -1)) {
+							place.season = place.season + ',';
+						}
+						place.season.split(',').forEach(UpdateMonthlySeasonalList);
+						function UpdateMonthlySeasonalList(element, index, array) {
+							console.log('a[' + index + '] = ' + element);
+							element = parseInt(element);
+							if (element != -1 && element != undefined) {
+								SeasonCollection.update({_Monthid: element},
+									{$addToSet: {MonthlyPlaces: place._id.toString()}},
+									{w: 1, upsert: true},
+									function (err, result) {
+										if (err) return console.dir(err);
+									});
+							}
+						}
+					});
 				});
-			});
-		if (place.type == "hotel")
-			db.collection('hotels', function (err, collection) {
-				collection.insert(place, {safe: true}, function (err, result) {
-					if (err) {
-						res.send({'error': 'An error has occurred'});
-					} else {
-						console.log('Success: ' + JSON.stringify(result[0]));
-						var locationObj = {};
-						locationObj.placeid = place._id.toString();
-						locationObj.placename = place.name;
-						locationObj.displaypicture = place.displaypicture;
-						locationObj.type = place.type;
-						locationObj.location = {};
-						locationObj.location.type = "Point";
-						locationObj.location.coordinates = [parseFloat(place.longitude), parseFloat(place.latitude)];
+			if (place.type == "hotel")
+				db.collection('hotels', function (err, collection) {
+					collection.insert(place, {safe: true}, function (err, result) {
+						if (err) {
+							res.send({'error': 'An error has occurred'});
+						} else {
+							console.log('Success: ' + JSON.stringify(result[0]));
+							var locationObj = {};
+							locationObj.placeid = place._id.toString();
+							locationObj.placename = place.name;
+							locationObj.displaypicture = place.displaypicture;
+							locationObj.type = place.type;
+							locationObj.location = {};
+							locationObj.location.type = "Point";
+							locationObj.location.coordinates = [parseFloat(place.longitude), parseFloat(place.latitude)];
 
-					}
-					var locationCollection = db.collection('placeLocationIDLookup');
-					//locationCollection.createIndex({ loc: "2dsphere" }, { min: -500, max: 500, w: 1 }, function (err, result) {
-					locationCollection.ensureIndex({"location": "2dsphere"}, function (err, result) {
-						if (err) return console.dir(err);
-						locationCollection.insert(locationObj, {w: 1}, function (err, result) {
-							if (err) return console.dir(err)
-						});
-					});
-					var SeasonCollection = db.collection('SeasonLookup');
-					if (!(place.season.indexOf(',') > -1)) {
-						place.season = place.season + ',';
-					}
-					place.season.split(',').forEach(UpdateMonthlySeasonalList);
-					function UpdateMonthlySeasonalList(element, index, array) {
-						console.log('a[' + index + '] = ' + element);
-						element = parseInt(element);
-						if (element != -1 && element != undefined) {
-							SeasonCollection.update({_Monthid: element},
-								{$addToSet: {MonthlyPlaces: place._id.toString()}},
-								{w: 1, upsert: true},
-								function (err, result) {
-									if (err) return console.dir(err);
-								});
 						}
-					}
-				});
-			});
-		if (place.type == "package")
-			db.collection('packages', function (err, collection) {
-				collection.insert(place, {safe: true}, function (err, result) {
-					if (err) {
-						res.send({'error': 'An error has occurred'});
-					} else {
-						console.log('Success: ' + JSON.stringify(result[0]));
-						var locationObj = {};
-						locationObj.placeid = place._id.toString();
-						locationObj.placename = place.name;
-						locationObj.displaypicture = place.displaypicture;
-						locationObj.location = {};
-						locationObj.location.type = "Point";
-						locationObj.location.coordinates = [parseFloat(place.longitude), parseFloat(place.latitude)];
-					}
-					var locationCollection = db.collection('placeLocationIDLookup');
-					//locationCollection.createIndex({ loc: "2dsphere" }, { min: -500, max: 500, w: 1 }, function (err, result) {
-					locationCollection.ensureIndex({"location": "2dsphere"}, function (err, result) {
-						if (err) return console.dir(err);
-						locationCollection.insert(locationObj, {w: 1}, function (err, result) {
-							if (err) return console.dir(err)
+						var locationCollection = db.collection('placeLocationIDLookup');
+						//locationCollection.createIndex({ loc: "2dsphere" }, { min: -500, max: 500, w: 1 }, function (err, result) {
+						locationCollection.ensureIndex({"location": "2dsphere"}, function (err, result) {
+							if (err) return console.dir(err);
+							locationCollection.insert(locationObj, {w: 1}, function (err, result) {
+								if (err) return console.dir(err)
+							});
 						});
-					});
-					var SeasonCollection = db.collection('SeasonLookup');
-					if (!(place.season.indexOf(',') > -1)) {
-						place.season = place.season + ',';
-					}
-					place.season.split(',').forEach(UpdateMonthlySeasonalList);
-					function UpdateMonthlySeasonalList(element, index, array) {
-						console.log('a[' + index + '] = ' + element);
-						element = parseInt(element);
-						if (element != -1 && element != undefined) {
-							SeasonCollection.update({_Monthid: element},
-								{$addToSet: {MonthlyPlaces: place._id.toString()}},
-								{w: 1, upsert: true},
-								function (err, result) {
-									if (err) return console.dir(err);
-								});
+						var SeasonCollection = db.collection('SeasonLookup');
+						if (!(place.season.indexOf(',') > -1)) {
+							place.season = place.season + ',';
 						}
-					}
+						place.season.split(',').forEach(UpdateMonthlySeasonalList);
+						function UpdateMonthlySeasonalList(element, index, array) {
+							console.log('a[' + index + '] = ' + element);
+							element = parseInt(element);
+							if (element != -1 && element != undefined) {
+								SeasonCollection.update({_Monthid: element},
+									{$addToSet: {MonthlyPlaces: place._id.toString()}},
+									{w: 1, upsert: true},
+									function (err, result) {
+										if (err) return console.dir(err);
+									});
+							}
+						}
+					});
 				});
-			});
+			if (place.type == "package")
+				db.collection('packages', function (err, collection) {
+					collection.insert(place, {safe: true}, function (err, result) {
+						if (err) {
+							res.send({'error': 'An error has occurred'});
+						} else {
+							console.log('Success: ' + JSON.stringify(result[0]));
+							var locationObj = {};
+							locationObj.placeid = place._id.toString();
+							locationObj.placename = place.name;
+							locationObj.displaypicture = place.displaypicture;
+							locationObj.location = {};
+							locationObj.location.type = "Point";
+							locationObj.location.coordinates = [parseFloat(place.longitude), parseFloat(place.latitude)];
+						}
+						var locationCollection = db.collection('placeLocationIDLookup');
+						//locationCollection.createIndex({ loc: "2dsphere" }, { min: -500, max: 500, w: 1 }, function (err, result) {
+						locationCollection.ensureIndex({"location": "2dsphere"}, function (err, result) {
+							if (err) return console.dir(err);
+							locationCollection.insert(locationObj, {w: 1}, function (err, result) {
+								if (err) return console.dir(err)
+							});
+						});
+						var SeasonCollection = db.collection('SeasonLookup');
+						if (!(place.season.indexOf(',') > -1)) {
+							place.season = place.season + ',';
+						}
+						place.season.split(',').forEach(UpdateMonthlySeasonalList);
+						function UpdateMonthlySeasonalList(element, index, array) {
+							console.log('a[' + index + '] = ' + element);
+							element = parseInt(element);
+							if (element != -1 && element != undefined) {
+								SeasonCollection.update({_Monthid: element},
+									{$addToSet: {MonthlyPlaces: place._id.toString()}},
+									{w: 1, upsert: true},
+									function (err, result) {
+										if (err) return console.dir(err);
+									});
+							}
+						}
+					});
+				});
+		}
 	});
+
 }
 
 exports.addUser = function (req, res) {
@@ -1425,53 +1458,52 @@ exports.addUser = function (req, res) {
 }
 exports.loadUserInfo = function (req, res) {
 	MongoClient.connect(connectionString, function(err, db) {
-		db.collection('users', function (err, collection) {
+		if (db != null) {
+			db.collection('users', function (err, collection) {
 
-			var user = req.body.name;
-			var pass = req.body.password;
-			if (user != undefined) {
-				//	}
-				var firsttimekey = "";//rand.generate(7);
-				user.passwd = firsttimekey;
-				console.log('fetching user details : ' + JSON.stringify(user));
-				collection.find({"name":user}).toArray(function (err, items) {
-					var record = items[0];
-					if(err)
-					{
-						res.sendStatus(500);
-					}
-					else if(record.length<=0)
-					{
-						res.sendStatus(200).send("invalid user");
-					}
-					else if(record.length>0 && record.password != undefined && record.password != pass)
-					{
-						res.sendStatus(200).send("invalid password");
-					}
-					else if(record!= undefined && record.password!= undefined && record.password == pass)
+				var user = req.body.name;
+				var pass = req.body.password;
+				if (user != undefined) {
+					//	}
+					var firsttimekey = "";//rand.generate(7);
+					user.passwd = firsttimekey;
+					console.log('fetching user details : ' + JSON.stringify(user));
+					collection.find({"name": user}).toArray(function (err, items) {
+						var record = items[0];
+						if (err) {
+							res.sendStatus(500);
+						}
+						else if (record!= null) {
+							res.sendStatus(200).send("invalid user");
+						}
+						else if (record != null && record.password != undefined && record.password != pass) {
+							res.sendStatus(200).send("invalid password");
+						}
+						else if (record != null && record.password != undefined && record.password == pass)
 
-					res.sendStatus(200).send(record);
-				});
-				// var userdetails =db.getUser(name);
-				// console.log(userdetails);
-				/*
-				 db.collection('users', function (err, collection) {
-				 collection.insert(user, {safe: true}, function (err, result) {
-				 if (err)
-				 {
-				 res.send({'error': 'An error has occurred'});
-				 } else
-				 {
+							res.sendStatus(200).send(record);
+					});
+					// var userdetails =db.getUser(name);
+					// console.log(userdetails);
+					/*
+					 db.collection('users', function (err, collection) {
+					 collection.insert(user, {safe: true}, function (err, result) {
+					 if (err)
+					 {
+					 res.send({'error': 'An error has occurred'});
+					 } else
+					 {
 
-				 Sms.SendMessage(firsttimekey);
-				 console.log('Success: ' + JSON.stringify(result[0]));
+					 Sms.SendMessage(firsttimekey);
+					 console.log('Success: ' + JSON.stringify(result[0]));
 
-				 }
-				 });
-				 });
-				 */
-			}
-		});
+					 }
+					 });
+					 });
+					 */
+				}
+			});
+		}
 	});
 }
 var mapFunction = function() {
@@ -1568,29 +1600,31 @@ exports.getNearbyPlaces =function(req,res)
 {
 	MongoClient.connect(connectionString, function(err, db) {
 		assert.equal(null, err);
-		console.log("Connected correctly to server");
-		var table = req.body.table;
-		var referencelocation = req.body.product;
-		var lastproduct = req.body.product.nearbylocation[req.body.product.nearbylocation.length - 1];
-		var inMeters = geolib.getDistance(
-			{latitude: lastproduct.lat, longitude: lastproduct.lon},
-			{latitude: referencelocation.latitude, longitude: referencelocation.longitude}
-		);
-		db.collection(table).ensureIndex({"point": "2dsphere"});
-		db.collection("placeLocationIDLookup").find({
-			location: {
-				$near: {
-					$geometry: {
-						type: "Point",
-						coordinates: [parseFloat(referencelocation.longitude), parseFloat(referencelocation.latitude)]
-					},
-					$minDistance: inMeters
+		if (db != null) {
+			console.log("Connected correctly to server");
+			var table = req.body.table;
+			var referencelocation = req.body.product;
+			var lastproduct = req.body.product.nearbylocation[req.body.product.nearbylocation.length - 1];
+			var inMeters = geolib.getDistance(
+				{latitude: lastproduct.lat, longitude: lastproduct.lon},
+				{latitude: referencelocation.latitude, longitude: referencelocation.longitude}
+			);
+			db.collection(table).ensureIndex({"point": "2dsphere"});
+			db.collection("placeLocationIDLookup").find({
+				location: {
+					$near: {
+						$geometry: {
+							type: "Point",
+							coordinates: [parseFloat(referencelocation.longitude), parseFloat(referencelocation.latitude)]
+						},
+						$minDistance: inMeters
+					}
 				}
-			}
-		}).toArray(function (err, data) {
-			debugger;
-			res.send(data);
-		});
+			}).toArray(function (err, data) {
+				debugger;
+				res.send(data);
+			});
+		}
 	});
 
 }
