@@ -3,6 +3,7 @@ var express = require('express'),
     http = require('http'),
     place = require('./routes/places'),
 	user = require('./routes/users'),
+	product = require('./routes/products'),
     Touringutility = require('./routes/utils');
 
 var busboy = require('connect-busboy'); //middleware for form/file
@@ -55,7 +56,7 @@ app.use(function(req, res, next) {
 
     // intercept OPTIONS method
     if (oneof && req.method == 'OPTIONS') {
-        res.send(200);
+        res.sendStatus(200);
     }
     else {
         next();
@@ -126,7 +127,7 @@ var done = false;
 
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, 'images')));
-app.get('/test',place.GetDataForHomePage);
+app.get('/test',product.GetHomePageItems);
 app.get('/categories',place.GetCategories);
 app.get('/seo',place.PopulateOffers);
 app.get('/categories/:type/:id/:lat/:long',place.GetPlacesByCategoryId);
@@ -134,13 +135,14 @@ app.get('/categories/:type/:id/:lat/:long',place.GetPlacesByCategoryId);
 app.get('/loadplace/:id', place.GetPlaceDetailsByPlaceID);
 app.post('/places', place.addPlace);
 app.post('/places/LoadScrollers', place.LoadScrollImages);
-app.post('/Save', place.addPlace);
+app.post('/Save', product.addProduct);
 app.get('/getTemperature/:location', place.getTemperature);
 //app.get('/getRecommendationsforseason', place.GetBestOffers);
-app.post('/getProducts', place.GetProducts);
+app.post('/getProducts', product.GetProducts);
 app.post('/geoCode', place.GeoCode);
-app.post('/login', place.loadUserInfo);
-app.post('/register', place.addUser);
+app.post('/login', user.loadUserInfo);
+app.post('/register', user.addUser);
+app.post('/updateuser', user.updateUser);
 app.post('/getTemperature/:location', place.getTemperature);
 app.post('/viewmore', place.getNearbyPlaces);
 app.get('/autocomplete/:search',place.getTypeAheadPlaceNames);

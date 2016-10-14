@@ -10,10 +10,6 @@ var Server = mongo.Server,
 var server = new Server('192.169.147.51', 27017, {auto_reconnect: true});
 var geolib  = require('geolib');
 var mongojs = require('mongojs');
-//var db;
-//var mongoconnection = "mongodb://user:password@ds019916.mlab.com:19916/heroku_wls18qcv";
-
-//var server = new Server(mongoconnection,{auto_reconnect:true});
 var GoogleMapsAPI = require('googlemaps');
 var forecast = new Forecast({
     service: 'forecast.io',
@@ -26,9 +22,9 @@ var forecast = new Forecast({
     }
 });
 
-var connectionString = 'mongodb://root:Vjy4livelytrips@192.169.149.245:27017/placesDB?authSource=admin';
+//var connectionString = 'mongodb://root:Vjy4livelytrips@192.169.149.245:27017/placesDB?authSource=admin';
 
-//var connectionString = 'mongodb://localhost:27017/placesDB';
+var connectionString = 'mongodb://localhost:27017/placesDB';
 var db = mongojs(connectionString);
 
 
@@ -39,10 +35,11 @@ var MongoClient = require('mongodb').MongoClient
 
 // Use connect method to connect to the Server
 MongoClient.connect(connectionString, function(err, db) {
-	assert.equal(null, err);
-    console.log("url:"+connectionString);
-	console.log("Connected correctly to server");
-
+	if(db!= null) {
+		assert.equal(null, err);
+		console.log("url:" + connectionString);
+		console.log("Connected correctly to server");
+	}
 	//db.close();
 });
 
@@ -189,7 +186,6 @@ function BuildSuggestionListByType(Arr_places, currentplace) {
 exports.GetDataForHomePage = function (req, res) {
     console.log('Retrieving all from scrollimages: ');
     MongoClient.connect(connectionString, function(err, db) {
-    	debugger;
     	if(db!= null)
 		{
     Async.parallel([
@@ -307,7 +303,6 @@ exports.GetDataForHomePage = function (req, res) {
 exports.GetHomePageDataObject = function () {
 	console.log('Retrieving all from scrollimages: ');
 	MongoClient.connect(connectionString, function(err, db) {
-		debugger;
 		if (db != null) {
 			db.collection('places').find().sort('type').toArray(function (e, docs) {
 				var resultSet = [];
@@ -657,14 +652,21 @@ exports.getTypeAheadPlaceNames = function (req, res) {
 };
 
 exports.getTemperature = function (req, res) {
-    var b = req.params.location;
-    var latitude = b.split(',')[0];
-    var longitude = b.split(',')[1];
-    forecast.get([latitude, longitude], function (err, weather) {
-        if (err) return console.dir(err);
-        console.dir(weather);
-        res.send(weather);
-    });
+	try {
+		var b = req.params.location;
+		var latitude = b.split(',')[0];
+		var longitude = b.split(',')[1];
+		forecast.get([latitude, longitude], function (err, weather) {
+			if (err) return console.dir(err);
+			console.dir(weather);
+			res.send(weather);
+		});
+	}
+	catch (e)
+	{
+		console.log(e);
+	}
+
 };
 
 exports.GeoCode = function (req, res) {
@@ -678,7 +680,6 @@ exports.GeoCode = function (req, res) {
     };
 
     gmAPI.geocode(geocodeParams, function(err, result){
-        debugger;
         console.log(result);
     });
 };
@@ -1050,7 +1051,6 @@ function BuildPlacesFromPlaceIds(placeids, type, res) {
 		});
     }
     catch (x) {
-        debugger;
     }
 }
 
@@ -1185,7 +1185,6 @@ function BuildPlacesFromPlaceIdForPackage(placeids, type) {
 		});
     }
     catch (x) {
-        debugger;
     }
 }
 
@@ -1306,7 +1305,8 @@ exports.addPackage = function (req, res) {
 			console.log('Adding package: ' + JSON.stringify(place));
 			if (place.type == "standalone")
 				db.collection('places', function (err, collection) {
-					collection.insert(place, {safe: true}, function (err, result) {
+					collection.insert(place, {safe: true}, function (err, result)
+					{
 						if (err) {
 							res.send({'error': 'An error has occurred'});
 						} else {
@@ -1457,55 +1457,58 @@ exports.addUser = function (req, res) {
 });
 }
 exports.loadUserInfo = function (req, res) {
+	try
+	{
 	MongoClient.connect(connectionString, function(err, db) {
 		if (db != null) {
 			db.collection('users', function (err, collection) {
 
 				var user = req.body.name;
 				var pass = req.body.password;
+				var status ="";
 				if (user != undefined) {
 					//	}
 					var firsttimekey = "";//rand.generate(7);
-					user.passwd = firsttimekey;
+				//	user.passwd = firsttimekey;
 					console.log('fetching user details : ' + JSON.stringify(user));
-					collection.find({"name": user}).toArray(function (err, items) {
-						var record = items[0];
+					collection.findOne({"name": user},(function (err, item) {
+						console.log('user details fetched: ' + JSON.stringify(user));
 						if (err) {
-							res.sendStatus(500);
-						}
-						else if (record!= null) {
-							res.sendStatus(200).send("invalid user");
-						}
-						else if (record != null && record.password != undefined && record.password != pass) {
-							res.sendStatus(200).send("invalid password");
-						}
-						else if (record != null && record.password != undefined && record.password == pass)
 
-							res.sendStatus(200).send(record);
-					});
-					// var userdetails =db.getUser(name);
-					// console.log(userdetails);
-					/*
-					 db.collection('users', function (err, collection) {
-					 collection.insert(user, {safe: true}, function (err, result) {
-					 if (err)
-					 {
-					 res.send({'error': 'An error has occurred'});
-					 } else
-					 {
-
-					 Sms.SendMessage(firsttimekey);
-					 console.log('Success: ' + JSON.stringify(result[0]));
-
-					 }
-					 });
-					 });
-					 */
+							status=500;
+						}
+						else if (item== null) {
+							status=202;
+						}
+						else if (item != null && item.password != undefined && item.password != pass) {
+							status=201;
+						}
+						else if (item != null && item.password != undefined && item.password == pass)
+						{
+							status = 200;
+						}
+						if(status == 200)
+						{
+							return res.send(200, JSON.stringify(item));
+						}
+						//	res.sendStatus(200).send(JSON.stringify(user));
+					})
+				);
 				}
 			});
 		}
 	});
+	}
+	catch (e)
+	{
+		console.log(' user details fetch error: ');
+		console.log(e);
+	}
 }
+
+
+
+
 var mapFunction = function() {
     for (var idx = 0; idx < this.items.length; idx++) {
         var key ="Honeymoon"//; this.items[idx].category;
@@ -1621,7 +1624,6 @@ exports.getNearbyPlaces =function(req,res)
 					}
 				}
 			}).toArray(function (err, data) {
-				debugger;
 				res.send(data);
 			});
 		}

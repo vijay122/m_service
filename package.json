@@ -26,6 +26,7 @@
     "body-parser": "^1.15.0",
     "cloudinary": "^1.4.1",
     "connect-busboy": "0.0.2",
+    "crypto": "0.0.3",
     "express": "^4.13.4",
     "express-session": "^1.14.1",
     "forecast": "^0.2.1",
@@ -43,5 +44,7 @@
   "engines": {
     "node": "<= 4.2.2"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "mongoose": "^4.6.3"
+  }
 }

@@ -1,72 +1,77 @@
-var mongo = require('mongodb');
-var util = require('util');
-var fs = require('fs');
-var http = require('http');
-var Forecast = require('forecast');
-var Async = require('async');
-var Server = mongo.Server,
-	Db = mongo.Db,
-	BSON = mongo.BSONPure;
-var server = new Server('192.169.147.51', 27017, {auto_reconnect: true});
-var geolib  = require('geolib');
-var mongojs = require('mongojs');
-//var db;
-//var mongoconnection = "mongodb://user:password@ds019916.mlab.com:19916/heroku_wls18qcv";
-
-//var server = new Server(mongoconnection,{auto_reconnect:true});
-var GoogleMapsAPI = require('googlemaps');
-var forecast = new Forecast({
-	service: 'forecast.io',
-	key: 'b97b1db6e3db369450d45bbb45648646',
-	units: 'celcius', // Only the first letter is parsed
-	cache: true,      // Cache API requests?
-	ttl: {
-		minutes: 27,
-		seconds: 45
-	}
-});
-
+var mongoose = require('mongoose');
+var User = require('../models/user');
 var connectionString = 'mongodb://root:Vjy4livelytrips@192.169.149.245:27017/placesDB?authSource=admin';
 
-//var connectionString = 'mongodb://localhost:27017/placesDB';
-var db = mongojs(connectionString);
+mongoose.connect('mongodb://root:Vjy4livelytrips@192.169.149.245:27017/placesDB?authSource=admin');
 
+exports.updateUser = function (req, res) {
+	try
+	{
+		if(req.body.payload.phone_number !="")
+		{
+			User.findOneAndUpdate({ phone_number: req.body.payload.phonenumber }, {
+				name:  req.body.payload.name,
+				password: req.body.payload.password,
+				email: req.body.payload.email,
+				username:req.body.payload.username,
+				phone_number :req.body.payload.phonenumber,
+			}, function(err, user) {
+				if (err) throw err;
+				console.log(user);
 
-var MongoClient = require('mongodb').MongoClient
-	, assert = require('assert');
+			});
+		}
 
-// Connection URL
-
-// Use connect method to connect to the Server
-MongoClient.connect(connectionString, function(err, db) {
-	assert.equal(null, err);
-	console.log("Connected correctly to server");
-
-	//db.close();
-});
+	}
+	catch (e)
+	{
+		console.log(' user details fetch error: ');
+		console.log(e);
+	}
+}
 
 exports.loadUserInfo = function (req, res) {
-	var user = req.body.name;
-	var firsttimekey = "";//rand.generate(7);
-	user.passwd = firsttimekey;
-	//console.log('Adding place: ' + JSON.stringify(user));
+	try
+	{
+		// get the user starlord55
+		User.findOne({ phone_number: req.body.payload.phone_number }, function(err, user) {
+			if (err) throw err;
 
-	//var userdetails =db.getUser(name);
-	//console.log(userdetails);
-	/*
-	 db.collection('users', function (err, collection) {
-	 collection.insert(user, {safe: true}, function (err, result) {
-	 if (err)
-	 {
-	 res.send({'error': 'An error has occurred'});
-	 } else
-	 {
+			// object of the user
+			var s = user.toObject();
+			return res.send(200, JSON.stringify(s));
+		});
+	}
+	catch (e)
+	{
+		console.log(' user details fetch error: ');
+		console.log(e);
+	}
+}
+exports.addUser = function (req, res) {
 
-	 Sms.SendMessage(firsttimekey);
-	 console.log('Success: ' + JSON.stringify(result[0]));
+	var firsttimekey ="12345678";// rand.generate(7);
 
-	 }
-	 });
-	 });
-	 */
+	var newUser = User({
+		phone_number: req.body.phone_number,
+		password:firsttimekey
+	});
+	console.log('Adding user: ' + JSON.stringify(newUser));
+	newUser.save(function(err) {
+		if (err) throw err;
+		if(req.body.supervisor_id!= "" && req.body.supervisor_id && req.body.supervisor_id != req.body.phone_number)
+		{
+			var user ={};
+			user.id =req.body.phone_number;
+			user.name=req.body.name;
+			user.status="Active";
+			User.findOneAndUpdate({ phone_number: req.body.supervisor_id },
+			{$push: {"mapped_users": user}}, function(err, user) {
+				if (err) throw err;
+				console.log(user);
+
+			});
+		}
+		console.log('User created!');
+	});
 }
