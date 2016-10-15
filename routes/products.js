@@ -234,6 +234,7 @@ else
 				try {
 
 					var response = {};
+					response.places =results[2]||[];
 					response.packages = results[0] || [];
 					response.hotels = results[1] || [];
 					response.events = results[2] || [];
@@ -310,7 +311,7 @@ var geoFindFunction =function (req, callback) {
 						type : "Point",
 						coordinates : [latitude, longitude]
 					},
-					$maxDistance : 1000
+				//	$maxDistance : 1000
 				}
 			}
 				};
