@@ -45,6 +45,7 @@
     "node": "<= 4.2.2"
   },
   "devDependencies": {
-    "mongoose": "^4.6.3"
+    "mongoose": "^4.6.3",
+    "mongoose-in-memory-autocomplete": "^1.2.3"
   }
 }

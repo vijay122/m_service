@@ -1,4 +1,7 @@
 var mongoose = require('mongoose');
+var AutoComplete = require('mongoose-in-memory-autocomplete').AutoComplete;
+
+//import * from "mongoose-in-memory-autocomplete";
 //var Place = require("../models/product");
 var crypto = require('crypto');
 var Async = require('async');
@@ -32,15 +35,72 @@ var ProductSchema = new Schema({
 	created_by:String,
 	season: String,
 });
+
+var EventSchema = new Schema({
+	name: String,
+	title:String,
+	_id:String,
+	inputType:String,
+	loc: {
+		type: { type: String },
+		coordinates: [ Number ],
+	},
+	city :String,
+	state:String,
+	pincode:String,
+	displaypicture:String,
+	description:String,
+	landmark: String,
+	image: [],
+	created_date: { type: Date, default: Date.now },
+	start_date: { type: Date, default: Date.now },
+	end_date: { type: Date, default: Date.now },
+	created_by:String,
+	season: String,
+});
+
+var PackageSchema = new Schema({
+	name: String,
+	title:String,
+	_id:String,
+	inputType:String,
+	loc: {
+		type: { type: String },
+		coordinates: [ Number ],
+	},
+	city :String,
+	state:String,
+	pincode:String,
+	assets:
+	{
+		display:String,
+		image:[]
+	},
+	description:String,
+	landmark: String,
+	price: Number,
+	sale: [{
+		salePrice: Number,
+		saleEndDate: { type: Date, default: Date.now },
+	}],
+	last_updated_date: { type: Date, default: Date.now },
+	start_date: { type: Date, default: Date.now },
+	end_date: { type: Date, default: Date.now },
+	created_by:String,
+	category:[String],
+	season: String,
+});
+
+
 ProductSchema.index({ loc : '2dsphere' });
 
-
+var Event = mongoose.model('Event', EventSchema);
 
 var Place = mongoose.model('Place', ProductSchema);
 
 var Hotel = mongoose.model('Hotel', ProductSchema);
 
-var Package = mongoose.model('Package', ProductSchema);
+var Package = mongoose.model('Package', PackageSchema);
 
 
 var connectionString = 'mongodb://root:Vjy4livelytrips@192.169.149.245:27017/placesDB?authSource=admin';
@@ -73,7 +133,7 @@ exports.addProduct = function (req, res) {
 		inputType:req.body.payload.type,
 		loc: {
 			type: "Point",
-			"coordinates": [req.body.payload.latitude, req.body.payload.longitude]
+			coordinates: [req.body.payload.latitude, req.body.payload.longitude]
 		},
 		city :req.body.payload.city,
 		state:req.body.payload.state,
@@ -95,7 +155,7 @@ exports.addProduct = function (req, res) {
 			inputType:req.body.payload.type,
 			loc: {
 				type: "Point",
-				"coordinates": [req.body.payload.latitude, req.body.payload.longitude]
+				coordinates: [req.body.payload.latitude, req.body.payload.longitude]
 			},
 			city :req.body.payload.city,
 			state:req.body.payload.state,
@@ -108,6 +168,53 @@ exports.addProduct = function (req, res) {
 			season: "summer",
 		});
 	}
+	if(req.body.payload.type=="event")
+	{
+		product = Event({
+			_id: req.body.payload.name+"_"+req.body.payload.city+"_"+req.body.payload.state+"_"+ randomValueHex(4),
+			name: req.body.payload.name,
+			title:req.body.payload.title,
+			inputType:req.body.payload.type,
+			loc: {
+				type: "Point",
+				coordinates: [req.body.payload.latitude, req.body.payload.longitude]
+			},
+			city :req.body.payload.city,
+			state:req.body.payload.state,
+			pincode:req.body.payload.pincode,
+			description:req.body.payload.description,
+			landmark: req.body.payload.landmark,
+			created_date: Date.now(),
+			season: "summer",
+		});
+	}
+	if(req.body.payload.type=="package")
+	{
+		product = Package({
+			_id: req.body.payload.name+"_"+req.body.payload.city+"_"+req.body.payload.state+"_"+ randomValueHex(4),
+			name: req.body.payload.name,
+			title:req.body.payload.title,
+			inputType:req.body.payload.type,
+			loc: {
+				type: "Point",
+				coordinates: [req.body.payload.latitude, req.body.payload.longitude]
+			},
+			city :req.body.payload.city,
+			state:req.body.payload.state,
+			pincode:req.body.payload.pincode,
+			description:req.body.payload.description,
+			landmark: req.body.payload.landmark,
+			assets:req.body.payload.assets,
+			price: req.body.payload.price,
+			sale: [{
+				salePrice: 0,
+				saleEndDate: Date.now(),
+			}],
+			created_by:req.body.payload.operator,
+			category:[String],
+			season: String,
+		});
+	}
 
 	console.log('Adding Place: ' + JSON.stringify(product));
 	product.save(function(err) {
@@ -116,7 +223,6 @@ exports.addProduct = function (req, res) {
 		console.log('Place created!');
 	});
 }
-
 exports.GetHomePageItems = function (req, res) {
 	try
 	{
@@ -162,8 +268,8 @@ exports.GetHomePageItems = function (req, res) {
 				}
 				var response = {};
 				response.places = results[0] || [];
-				response.offers = results[1].displayoffers || [];
-				response.useroffers = results[1].useroffers || [];
+				response.hotels = results[1] || [];
+				response.packages = results[2] || [];
 				response.seo = results[2]||[];
 				return res.send(200, response);
 			});
@@ -353,4 +459,31 @@ function DesitionEngine(req)
 
 	}
 	return string;
+}
+
+// Autocomplete configuration
+var configuration = {
+	//Fields being autocompleted, they will be concatenated
+	autoCompleteFields : [ "name"],
+	//Returned data with autocompleted results
+	dataFields: ["_id","image","loc"],
+	//Maximum number of results to return with an autocomplete request
+	maximumResults: 10,
+	//MongoDB model (defined earlier) that will be used for autoCompleteFields and dataFields
+	model: Place
+}
+
+//initialization of AutoComplete Module
+var myPlacesAutoComplete =new AutoComplete(configuration, function(){
+	//any calls required after the initialization
+	console.log("Loaded " + myPlacesAutoComplete.getCacheSize() + " words in auto complete");
+});
+
+exports.getTypeAheadPlaceNames = function (req, res) {
+	myPlacesAutoComplete.getResults(req.params.search, function (err, words) {
+		if (err)
+			res.json(err);
+		else
+			res.json(words);
+	});
 }

@@ -145,7 +145,7 @@ app.post('/register', user.addUser);
 app.post('/updateuser', user.updateUser);
 app.post('/getTemperature/:location', place.getTemperature);
 app.post('/viewmore', place.getNearbyPlaces);
-app.get('/autocomplete/:search',place.getTypeAheadPlaceNames);
+app.get('/autocomplete/:search',product.getTypeAheadPlaceNames);
 app.get('/isready',place.getstatus);
 app.get('/typeahead/:id',place.getTypeAheadPlaceNames);
 
