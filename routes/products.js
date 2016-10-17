@@ -461,6 +461,7 @@ function DesitionEngine(req)
 	return string;
 }
 
+/*
 // Autocomplete configuration
 var configuration = {
 	//Fields being autocompleted, they will be concatenated
@@ -474,10 +475,18 @@ var configuration = {
 }
 
 //initialization of AutoComplete Module
-var myPlacesAutoComplete =new AutoComplete(configuration, function(){
-	//any calls required after the initialization
-	console.log("Loaded " + myPlacesAutoComplete.getCacheSize() + " words in auto complete");
-});
+try
+{
+	var myPlacesAutoComplete =new AutoComplete(configuration, function(){
+		//any calls required after the initialization
+		console.log("Loaded " + myPlacesAutoComplete.getCacheSize() + " words in auto complete");
+	});
+}
+catch (e)
+{
+	console.log("exception at autocomplete initialization:"+e);
+}
+
 
 exports.getTypeAheadPlaceNames = function (req, res) {
 	myPlacesAutoComplete.getResults(req.params.search, function (err, words) {
@@ -487,3 +496,4 @@ exports.getTypeAheadPlaceNames = function (req, res) {
 			res.json(words);
 	});
 }
+*/
