@@ -4,6 +4,7 @@
   "description": "A tour server application",
   "main": "PlaceServer.js",
   "scripts": {
+    "run":"sudo node PlaceServer.js",
     "test": "pl",
     "start": "babel-node ./PlaceServer.js",
     "deploy": "gcloud preview app deploy"
