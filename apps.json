@@ -1,0 +1,14 @@
+{
+	"apps": [
+	{
+		"name": "PlaceServer",
+		"script": "PlaceServer.js",
+		"instances": 2,
+		"exec_mode": "fork",
+		"env": {
+			"NODE_ENV": "production",
+			"PORT": "8000"
+		}
+	}
+]
+}
