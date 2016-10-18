@@ -341,9 +341,9 @@ else
 
 					var response = {};
 					response.places =results[2]||[];
-					response.packages = results[0] || [];
-					response.hotels = results[1] || [];
-					response.events = results[2] || [];
+					response.packages = results[2] || [];
+					response.hotels = results[0] || [];
+					response.events = results[1] || [];
 					if (response != "Not Found" && typeof response == "object")
 						res.send(200, JSON.stringify(response));
 				}
