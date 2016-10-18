@@ -2,8 +2,8 @@
 	"apps": [
 	{
 		"name": "PlaceServer",
-		"script": "PlaceServer.js",
-		"instances": 2,
+		"script": "sudo PlaceServer.js",
+		"instances": 1,
 		"exec_mode": "fork",
 		"env": {
 			"NODE_ENV": "production",
