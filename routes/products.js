@@ -125,9 +125,22 @@ exports.updateUser = function (req, res) {
 	}
 }
 
+function generate_id(req) {
+	var str = req.body.payload.name+"_"+req.body.payload.city+"_"+req.body.payload.state+"_"+ randomValueHex(4);
+	var lower = str.toLowerCase();
+	var upper = str.toUpperCase();
+
+	var res = "";
+	for(var i=0; i<lower.length; ++i) {
+		if(lower[i] != upper[i] || lower[i].trim() === '')
+			res += str[i];
+	}
+	return res;
+}
+
 exports.addProduct = function (req, res) {
 	var product = Place({
-		_id: req.body.payload.name+"_"+req.body.payload.city+"_"+req.body.payload.state+"_"+ randomValueHex(4),
+		_id: generate_id(req),
 		name: req.body.payload.name,
 		title:req.body.payload.title,
 		inputType:req.body.payload.type,
