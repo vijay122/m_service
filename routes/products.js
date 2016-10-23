@@ -135,6 +135,7 @@ function generate_id(req) {
 		if(lower[i] != upper[i] || lower[i].trim() === '')
 			res += str[i];
 	}
+	res = res.replace(/\s+/g, '');
 	return res;
 }
 
@@ -162,7 +163,7 @@ exports.addProduct = function (req, res) {
 	if(req.body.payload.type=="hotel")
 	{
 		product = Hotel({
-			_id: req.body.payload.name+"_"+req.body.payload.city+"_"+req.body.payload.state+"_"+ randomValueHex(4),
+			_id: generate_id(req),
 			name: req.body.payload.name,
 			title:req.body.payload.title,
 			inputType:req.body.payload.type,
@@ -184,7 +185,7 @@ exports.addProduct = function (req, res) {
 	if(req.body.payload.type=="event")
 	{
 		product = Event({
-			_id: req.body.payload.name+"_"+req.body.payload.city+"_"+req.body.payload.state+"_"+ randomValueHex(4),
+			_id: generate_id(req),
 			name: req.body.payload.name,
 			title:req.body.payload.title,
 			inputType:req.body.payload.type,
@@ -204,7 +205,7 @@ exports.addProduct = function (req, res) {
 	if(req.body.payload.type=="package")
 	{
 		product = Package({
-			_id: req.body.payload.name+"_"+req.body.payload.city+"_"+req.body.payload.state+"_"+ randomValueHex(4),
+			_id: generate_id(req),
 			name: req.body.payload.name,
 			title:req.body.payload.title,
 			inputType:req.body.payload.type,
@@ -308,6 +309,12 @@ exports.GetProducts = function (req, res) {
 		}
 		var callbackFunctions = [];
 		var datatable=[];
+		if(req.body.payload.sectionName=="search")
+		{
+			var table =req.body.payload.searchCategory;
+			var criteria = req.body.payload.criteria;
+			datatable.push(table);
+		}
 		if(req.body.payload.sectionName=="home")
 		{
 			datatable.push('Hotel');
@@ -337,7 +344,7 @@ exports.GetProducts = function (req, res) {
 			request.lat =req.body.payload.lat;
 			request.lon= req.body.payload.lon;
 			request.max = req.body.payload.max;
-			if(req.body.payload.lat==undefined)
+			if(req.body.payload.lat==undefined && req.body.payload.sectionName!= undefined)
 			{
 				callbackFunctions.push(FindFunction(request));
 			}
