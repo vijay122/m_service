@@ -313,6 +313,8 @@ exports.GetProducts = function (req, res) {
 		{
 			var table =req.body.payload.searchCategory;
 			var criteria = req.body.payload.criteria;
+			req.body.payload.lat =12.12;
+			req.body.payload.lon =12.12;
 			datatable.push(table);
 		}
 		if(req.body.payload.sectionName=="home")
@@ -360,10 +362,33 @@ else
 				try {
 
 					var response = {};
-					response.places =results[2]||[];
-					response.packages = results[2] || [];
-					response.hotels = results[0] || [];
-					response.events = results[1] || [];
+					for(var i=0; i< results.length ; i++)
+					{
+						if(results[i].findTable =="Place")
+						{
+							response.places =results[i]||[];
+						}
+						if(results[i].findTable =="Package")
+						{
+							response.packages =results[i]||[];
+						}
+						if(results[i].findTable =="Hotel")
+						{
+							response.hotels =results[i]||[];
+						}
+						if(results[i].findTable =="Event")
+						{
+							response.events =results[i]||[];
+						}
+						if(results[i].findTable =="User")
+						{
+							response.users =results[i]||[];
+						}
+					}
+					//response.places =results[2]||[];
+					//response.packages = results[2] || [];
+					//response.hotels = results[0] || [];
+					//response.events = results[1] || [];
 					if (response != "Not Found" && typeof response == "object")
 						res.send(200, JSON.stringify(response));
 				}
@@ -389,6 +414,7 @@ var FindFunction =function (req, callback) {
 			var datas = data.map(function (record) {
 				return record.toObject();
 			});
+			datas.findTable =req.findTable;
 			callback(null, datas);
 
 		});
@@ -449,6 +475,7 @@ var geoFindFunction =function (req, callback) {
 				}
 				else
 				{
+					results.findTable =req.findTable;
 					callback(null, results);
 				}
 			});
