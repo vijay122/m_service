@@ -29,6 +29,9 @@ var ProductSchema = new Schema({
 	pincode:String,
 	displaypicture:String,
 	description:String,
+	whattoeat:String,
+	whattodo:String,
+	howtoreach:String,
 	landmark: String,
 	image: [],
 	created_date: { type: Date, default: Date.now },
@@ -50,6 +53,9 @@ var EventSchema = new Schema({
 	pincode:String,
 	displaypicture:String,
 	description:String,
+	whattoeat:String,
+	whattodo:String,
+	howtoreach:String,
 	landmark: String,
 	image: [],
 	created_date: { type: Date, default: Date.now },
@@ -313,8 +319,8 @@ exports.GetProducts = function (req, res) {
 		{
 			var table =req.body.payload.searchCategory;
 			var criteria = req.body.payload.criteria;
-			req.body.payload.lat =12.12;
-			req.body.payload.lon =12.12;
+			//req.body.payload.lat =12.12;
+			//req.body.payload.lon =12.12;
 			datatable.push(table);
 		}
 		if(req.body.payload.sectionName=="home")
@@ -327,7 +333,7 @@ exports.GetProducts = function (req, res) {
 		{
 			datatable.push('Hotel');
 			datatable.push('Place');
-		//	datatable.push('Package');
+			datatable.push('Package');
 		//	datatable.push('Event');
 		}
 		if(req.body.payload.sectionName=="admin")
@@ -443,7 +449,7 @@ var geoFindFunction =function (req, callback) {
 		try {
  var latitude = parseFloat(req.lat);
  var longitude = parseFloat(req.lon);
-
+			mongoose.models[req.findTable].ensureIndexes({point:"2dsphere"});
 			var point = {
 				type: "Point",
 				coordinates: [latitude,longitude]
@@ -508,7 +514,7 @@ function DesitionEngine(req)
 	return string;
 }
 
-/*
+
 // Autocomplete configuration
 var configuration = {
 	//Fields being autocompleted, they will be concatenated
@@ -543,4 +549,4 @@ exports.getTypeAheadPlaceNames = function (req, res) {
 			res.json(words);
 	});
 }
-*/
+
