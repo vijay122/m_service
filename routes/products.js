@@ -27,6 +27,7 @@ var ProductSchema = new Schema({
 	city :String,
 	state:String,
 	pincode:String,
+	country:String,
 	displaypicture:String,
 	description:String,
 	whattoeat:String,
@@ -51,6 +52,7 @@ var EventSchema = new Schema({
 	city :String,
 	state:String,
 	pincode:String,
+	country:String,
 	displaypicture:String,
 	description:String,
 	whattoeat:String,
@@ -77,6 +79,7 @@ var PackageSchema = new Schema({
 	city :String,
 	state:String,
 	pincode:String,
+	country:String,
 	assets:
 	{
 		display:String,
@@ -147,7 +150,7 @@ function generate_id(req) {
 
 exports.addProduct = function (req, res) {
 	var product = Place({
-		_id: generate_id(req),
+		_id: req.body.payload._id?req.body.payload._id:generate_id(req),
 		name: req.body.payload.name,
 		title:req.body.payload.title,
 		inputType:req.body.payload.type,
@@ -155,10 +158,14 @@ exports.addProduct = function (req, res) {
 			type: "Point",
 			coordinates: [req.body.payload.latitude, req.body.payload.longitude]
 		},
+		description:req.body.payload.description,
+		whattoeat:req.body.payload.whattoeat,
+		whattodo:req.body.payload.whattodo,
+		howtoreach:req.body.payload.howtoreach,
 		city :req.body.payload.city,
 		state:req.body.payload.state,
+		country:req.body.payload.country,
 		pincode:req.body.payload.pincode,
-		description:req.body.payload.description,
 		landmark: req.body.payload.landmark,
 		displaypicture:req.body.payload.displaypicture,
 		image: req.body.payload.image,
@@ -169,7 +176,7 @@ exports.addProduct = function (req, res) {
 	if(req.body.payload.type=="hotel")
 	{
 		product = Hotel({
-			_id: generate_id(req),
+			_id: req.body.payload._id?req.body.payload._id:generate_id(req),
 			name: req.body.payload.name,
 			title:req.body.payload.title,
 			inputType:req.body.payload.type,
@@ -179,8 +186,12 @@ exports.addProduct = function (req, res) {
 			},
 			city :req.body.payload.city,
 			state:req.body.payload.state,
+			country:req.body.payload.country,
 			pincode:req.body.payload.pincode,
 			description:req.body.payload.description,
+			whattoeat:req.body.payload.whattoeat,
+			whattodo:req.body.payload.whattodo,
+			howtoreach:req.body.payload.howtoreach,
 			landmark: req.body.payload.landmark,
 			displaypicture:req.body.payload.displaypicture,
 			image: req.body.payload.image,
@@ -191,7 +202,7 @@ exports.addProduct = function (req, res) {
 	if(req.body.payload.type=="event")
 	{
 		product = Event({
-			_id: generate_id(req),
+			_id: req.body.payload._id?req.body.payload._id:generate_id(req),
 			name: req.body.payload.name,
 			title:req.body.payload.title,
 			inputType:req.body.payload.type,
@@ -203,6 +214,9 @@ exports.addProduct = function (req, res) {
 			state:req.body.payload.state,
 			pincode:req.body.payload.pincode,
 			description:req.body.payload.description,
+			whattoeat:req.body.payload.whattoeat,
+			whattodo:req.body.payload.whattodo,
+			howtoreach:req.body.payload.howtoreach,
 			landmark: req.body.payload.landmark,
 			created_date: Date.now(),
 			season: "summer",
@@ -211,7 +225,7 @@ exports.addProduct = function (req, res) {
 	if(req.body.payload.type=="package")
 	{
 		product = Package({
-			_id: generate_id(req),
+			_id: req.body.payload._id?req.body.payload._id:generate_id(req),
 			name: req.body.payload.name,
 			title:req.body.payload.title,
 			inputType:req.body.payload.type,
@@ -223,6 +237,9 @@ exports.addProduct = function (req, res) {
 			state:req.body.payload.state,
 			pincode:req.body.payload.pincode,
 			description:req.body.payload.description,
+			whattoeat:req.body.payload.whattoeat,
+			whattodo:req.body.payload.whattodo,
+			howtoreach:req.body.payload.howtoreach,
 			landmark: req.body.payload.landmark,
 			assets:req.body.payload.assets,
 			price: req.body.payload.price,
@@ -237,11 +254,18 @@ exports.addProduct = function (req, res) {
 	}
 
 	console.log('Adding Place: ' + JSON.stringify(product));
-	product.save(function(err) {
+	var upsertData = product.toObject();
+	Place.findOneAndUpdate({"_id": upsertData._id}, upsertData, {upsert: true}, function(err, result){
 		if (err) throw err;
 
 		console.log('Place created!');
 	});
+	/*product.update({'_id': upsertData._id},{upsert: true},function(err,result) {
+		if (err) throw err;
+
+		console.log('Place created!');
+	});
+	*/
 }
 exports.GetHomePageItems = function (req, res) {
 	try
@@ -304,6 +328,7 @@ exports.GetHomePageItems = function (req, res) {
 exports.GetProducts = function (req, res) {
 	try
 	{
+
 		var noOfRecords=0;
 		if(req.body.payload.noOfRecords!= undefined)
 		{
@@ -317,10 +342,7 @@ exports.GetProducts = function (req, res) {
 		var datatable=[];
 		if(req.body.payload.sectionName=="search")
 		{
-			var table =req.body.payload.searchCategory;
-			var criteria = req.body.payload.criteria;
-			//req.body.payload.lat =12.12;
-			//req.body.payload.lon =12.12;
+			var table =req.body.payload.findtable;
 			datatable.push(table);
 		}
 		if(req.body.payload.sectionName=="home")
@@ -352,6 +374,11 @@ exports.GetProducts = function (req, res) {
 			request.lat =req.body.payload.lat;
 			request.lon= req.body.payload.lon;
 			request.max = req.body.payload.max;
+			if(req.body.payload.searchby =="_id")
+			{
+				request._id =req.body.payload.searchvalue;
+			}
+
 			if(req.body.payload.lat==undefined && req.body.payload.sectionName!= undefined)
 			{
 				callbackFunctions.push(FindFunction(request));
@@ -410,12 +437,21 @@ console.log("exception in get products:"+ e);
 	}
 }
 
+var getCreateRequest= function(req)
+{
+
+	var reqFormat = {};
+	if(req._id != undefined)
+	reqFormat._id = req._id;
+	return reqFormat;
+}
+
 var FindFunction =function (req, callback) {
 	return  function(callback) {
 		try {
+var findRequest = getCreateRequest(req);
 
-
-		mongoose.models[req.findTable].find({}, function(err, data) {
+		mongoose.models[req.findTable].find(findRequest, function(err, data) {
 			if (err) throw err;
 			var datas = data.map(function (record) {
 				return record.toObject();
