@@ -135,7 +135,7 @@ app.get('/categories/:type/:id/:lat/:long',place.GetPlacesByCategoryId);
 app.get('/loadplace/:id', place.GetPlaceDetailsByPlaceID);
 app.post('/places', place.addPlace);
 app.post('/places/LoadScrollers', place.LoadScrollImages);
-app.post('/Save', product.g);
+app.post('/Save', product.addProduct);
 app.get('/getTemperature/:location', place.getTemperature);
 //app.get('/getRecommendationsforseason', place.GetBestOffers);
 app.post('/getProducts', product.GetProducts);
