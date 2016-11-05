@@ -607,7 +607,7 @@ var Packageconfiguration = {
 	//Fields being autocompleted, they will be concatenated
 	autoCompleteFields : [ "name"],
 	//Returned data with autocompleted results
-	dataFields: ["_id","image","loc"],
+	dataFields: ["_id","assets","loc"],
 	//Maximum number of results to return with an autocomplete request
 	maximumResults: 10,
 	//MongoDB model (defined earlier) that will be used for autoCompleteFields and dataFields
