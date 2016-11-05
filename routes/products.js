@@ -321,6 +321,16 @@ exports.GetHomePageItems = function (req, res) {
 
 			});
 		},
+				function(callback) {
+					Event.find({}, function(err, data) {
+						if (err) throw err;
+						var datas = data.map(function (record) {
+							return record.toObject();
+						});
+						callback(null, datas);
+
+					});
+				},
 			function(callback) {
 			Package.find({}, function(err, data) {
 				if (err) throw err;
@@ -380,13 +390,14 @@ exports.GetProducts = function (req, res) {
 			datatable.push('Hotel');
 			datatable.push('Place');
 			datatable.push('Package');
+			datatable.push('Event');
 		}
 		if(req.body.payload.sectionName=="detail")
 		{
 			datatable.push('Hotel');
 			datatable.push('Place');
 			datatable.push('Package');
-		//	datatable.push('Event');
+			datatable.push('Event');
 		}
 		if(req.body.payload.sectionName=="admin")
 		{
