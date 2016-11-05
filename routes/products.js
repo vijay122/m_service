@@ -69,14 +69,17 @@ var EventSchema = new Schema({
 
 var PackageSchema = new Schema({
 	name: String,
+	duration:String,
 	title:String,
 	_id:String,
+	classification:String,
 	inputType:String,
 	loc: {
 		type: { type: String },
 		coordinates: [ Number ],
 	},
 	city :String,
+	district:String,
 	state:String,
 	pincode:String,
 	country:String,
@@ -255,11 +258,38 @@ exports.addProduct = function (req, res) {
 
 	console.log('Adding Place: ' + JSON.stringify(product));
 	var upsertData = product.toObject();
-	Place.findOneAndUpdate({"_id": upsertData._id}, upsertData, {upsert: true}, function(err, result){
-		if (err) throw err;
+	if(req.body.payload.type=="hotel")
+	{
+		Place.findOneAndUpdate({"_id": upsertData._id}, upsertData, {upsert: true}, function(err, result){
+			if (err) throw err;
 
-		console.log('Place created!');
-	});
+			console.log('Place created!');
+		});
+	}
+	if(req.body.payload.type=="event")
+	{
+		Event.findOneAndUpdate({"_id": upsertData._id}, upsertData, {upsert: true}, function(err, result){
+			if (err) throw err;
+
+			console.log('Place created!');
+		});
+	}
+	if(req.body.payload.type=="hotel")
+	{
+		Hotel.findOneAndUpdate({"_id": upsertData._id}, upsertData, {upsert: true}, function(err, result){
+			if (err) throw err;
+
+			console.log('Place created!');
+		});
+	}
+	if(req.body.payload.type=="package")
+	{
+		Package.findOneAndUpdate({"_id": upsertData._id}, upsertData, {upsert: true}, function(err, result){
+			if (err) throw err;
+
+			console.log('Place created!');
+		});
+	}
 	/*product.update({'_id': upsertData._id},{upsert: true},function(err,result) {
 		if (err) throw err;
 
@@ -562,6 +592,16 @@ var configuration = {
 	//MongoDB model (defined earlier) that will be used for autoCompleteFields and dataFields
 	model: Place
 }
+var Packageconfiguration = {
+	//Fields being autocompleted, they will be concatenated
+	autoCompleteFields : [ "name"],
+	//Returned data with autocompleted results
+	dataFields: ["_id","image","loc"],
+	//Maximum number of results to return with an autocomplete request
+	maximumResults: 10,
+	//MongoDB model (defined earlier) that will be used for autoCompleteFields and dataFields
+	model: Package
+}
 
 //initialization of AutoComplete Module
 try
@@ -569,6 +609,10 @@ try
 	var myPlacesAutoComplete =new AutoComplete(configuration, function(){
 		//any calls required after the initialization
 		console.log("Loaded " + myPlacesAutoComplete.getCacheSize() + " words in auto complete");
+	});
+	var myPackageAutoComplete =new AutoComplete(Packageconfiguration, function(){
+		//any calls required after the initialization
+		console.log("Loaded " + myPackageAutoComplete.getCacheSize() + " words in auto complete");
 	});
 }
 catch (e)
@@ -578,11 +622,28 @@ catch (e)
 
 
 exports.getTypeAheadPlaceNames = function (req, res) {
-	myPlacesAutoComplete.getResults(req.params.search, function (err, words) {
-		if (err)
-			res.json(err);
-		else
-			res.json(words);
-	});
+	if(req.params.searchon!= undefined)
+	{
+		if(req.params.searchon=="Place")
+		{
+			myPlacesAutoComplete.getResults(req.params.search, function (err, words) {
+				if (err)
+					res.json(err);
+				else
+					res.json(words);
+			});
+		}
+		if(req.params.searchon=="Package")
+		{
+			myPackageAutoComplete.getResults(req.params.search, function (err, words) {
+				if (err)
+					res.json(err);
+				else
+					res.json(words);
+			});
+		}
+
+	}
+
 }
 
