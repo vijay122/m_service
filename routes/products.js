@@ -224,6 +224,8 @@ exports.addProduct = function (req, res) {
 			whattodo:req.body.payload.whattodo,
 			howtoreach:req.body.payload.howtoreach,
 			landmark: req.body.payload.landmark,
+			displaypicture:req.body.payload.displaypicture,
+			image: req.body.payload.image,
 			created_date: Date.now(),
 			season: "summer",
 		});
