@@ -152,6 +152,9 @@ function generate_id(req) {
 }
 
 exports.addProduct = function (req, res) {
+	var package ={};
+	var event={};
+	var hotel={};
 	var product = Place({
 		_id: req.body.payload._id?req.body.payload._id:generate_id(req),
 		name: req.body.payload.name,
@@ -178,7 +181,7 @@ exports.addProduct = function (req, res) {
 
 	if(req.body.payload.type=="hotel")
 	{
-		product = Hotel({
+		hotel = Hotel({
 			_id: req.body.payload._id?req.body.payload._id:generate_id(req),
 			name: req.body.payload.name,
 			title:req.body.payload.title,
@@ -204,7 +207,7 @@ exports.addProduct = function (req, res) {
 	}
 	if(req.body.payload.type=="event")
 	{
-		product = Event({
+		event = Event({
 			_id: req.body.payload._id?req.body.payload._id:generate_id(req),
 			name: req.body.payload.name,
 			title:req.body.payload.title,
@@ -227,7 +230,7 @@ exports.addProduct = function (req, res) {
 	}
 	if(req.body.payload.type=="package")
 	{
-		product = Package({
+		package = Package({
 			_id: req.body.payload._id?req.body.payload._id:generate_id(req),
 			name: req.body.payload.name,
 			title:req.body.payload.title,
@@ -236,9 +239,11 @@ exports.addProduct = function (req, res) {
 				type: "Point",
 				coordinates: [req.body.payload.latitude, req.body.payload.longitude]
 			},
+			district:req.body.payload.district,
 			city :req.body.payload.city,
 			state:req.body.payload.state,
 			pincode:req.body.payload.pincode,
+			duration:req.body.payload.duration,
 			description:req.body.payload.description,
 			whattoeat:req.body.payload.whattoeat,
 			whattodo:req.body.payload.whattodo,
@@ -256,10 +261,11 @@ exports.addProduct = function (req, res) {
 		});
 	}
 
-	console.log('Adding Place: ' + JSON.stringify(product));
-	var upsertData = product.toObject();
+
 	if(req.body.payload.type=="hotel")
 	{
+		console.log('Adding Place: ' + JSON.stringify(product));
+		var upsertData = product.toObject();
 		Place.findOneAndUpdate({"_id": upsertData._id}, upsertData, {upsert: true}, function(err, result){
 			if (err) throw err;
 
@@ -268,6 +274,8 @@ exports.addProduct = function (req, res) {
 	}
 	if(req.body.payload.type=="event")
 	{
+		console.log('Adding Place: ' + JSON.stringify(event));
+		var upsertData = event.toObject();
 		Event.findOneAndUpdate({"_id": upsertData._id}, upsertData, {upsert: true}, function(err, result){
 			if (err) throw err;
 
@@ -276,6 +284,8 @@ exports.addProduct = function (req, res) {
 	}
 	if(req.body.payload.type=="hotel")
 	{
+		console.log('Adding Place: ' + JSON.stringify(hotel));
+		var upsertData = hotel.toObject();
 		Hotel.findOneAndUpdate({"_id": upsertData._id}, upsertData, {upsert: true}, function(err, result){
 			if (err) throw err;
 
@@ -284,18 +294,14 @@ exports.addProduct = function (req, res) {
 	}
 	if(req.body.payload.type=="package")
 	{
+		console.log('Adding Place: ' + JSON.stringify(package));
+		var upsertData = package.toObject();
 		Package.findOneAndUpdate({"_id": upsertData._id}, upsertData, {upsert: true}, function(err, result){
 			if (err) throw err;
 
 			console.log('Place created!');
 		});
 	}
-	/*product.update({'_id': upsertData._id},{upsert: true},function(err,result) {
-		if (err) throw err;
-
-		console.log('Place created!');
-	});
-	*/
 }
 exports.GetHomePageItems = function (req, res) {
 	try
