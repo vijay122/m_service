@@ -19,7 +19,7 @@ var ProductSchema = new Schema({
 	name: String,
 	title:String,
 	_id:String,
-	inputType:String,
+	type:String,
 	loc: {
 		type: { type: String },
 		coordinates: [ Number ],
@@ -44,7 +44,7 @@ var EventSchema = new Schema({
 	name: String,
 	title:String,
 	_id:String,
-	inputType:String,
+	type:String,
 	loc: {
 		type: { type: String },
 		coordinates: [ Number ],
@@ -73,7 +73,7 @@ var PackageSchema = new Schema({
 	title:String,
 	_id:String,
 	classification:String,
-	inputType:String,
+	type:String,
 	loc: {
 		type: { type: String },
 		coordinates: [ Number ],
@@ -159,7 +159,7 @@ exports.addProduct = function (req, res) {
 		_id: req.body.payload._id?req.body.payload._id:generate_id(req),
 		name: req.body.payload.name,
 		title:req.body.payload.title,
-		inputType:req.body.payload.type,
+		type:req.body.payload.type,
 		loc: {
 			type: "Point",
 			coordinates: [req.body.payload.latitude, req.body.payload.longitude]
@@ -185,7 +185,7 @@ exports.addProduct = function (req, res) {
 			_id: req.body.payload._id?req.body.payload._id:generate_id(req),
 			name: req.body.payload.name,
 			title:req.body.payload.title,
-			inputType:req.body.payload.type,
+			type:req.body.payload.type,
 			loc: {
 				type: "Point",
 				coordinates: [req.body.payload.latitude, req.body.payload.longitude]
@@ -211,7 +211,7 @@ exports.addProduct = function (req, res) {
 			_id: req.body.payload._id?req.body.payload._id:generate_id(req),
 			name: req.body.payload.name,
 			title:req.body.payload.title,
-			inputType:req.body.payload.type,
+			type:req.body.payload.type,
 			loc: {
 				type: "Point",
 				coordinates: [req.body.payload.latitude, req.body.payload.longitude]
@@ -236,7 +236,7 @@ exports.addProduct = function (req, res) {
 			_id: req.body.payload._id?req.body.payload._id:generate_id(req),
 			name: req.body.payload.name,
 			title:req.body.payload.title,
-			inputType:req.body.payload.type,
+			type:req.body.payload.type,
 			loc: {
 				type: "Point",
 				coordinates: [req.body.payload.latitude, req.body.payload.longitude]
