@@ -264,7 +264,7 @@ exports.addProduct = function (req, res) {
 	}
 
 
-	if(req.body.payload.type=="hotel")
+	if(req.body.payload.type=="standalone")
 	{
 		console.log('Adding Place: ' + JSON.stringify(product));
 		var upsertData = product.toObject();
@@ -625,7 +625,7 @@ var configuration = {
 	//MongoDB model (defined earlier) that will be used for autoCompleteFields and dataFields
 	model: Place
 }
-var Packageconfiguration = {
+var packageconfiguration = {
 	//Fields being autocompleted, they will be concatenated
 	autoCompleteFields : [ "name"],
 	//Returned data with autocompleted results
@@ -636,6 +636,39 @@ var Packageconfiguration = {
 	model: Package
 }
 
+var hotelconfiguration = {
+	//Fields being autocompleted, they will be concatenated
+	autoCompleteFields : [ "name"],
+	//Returned data with autocompleted results
+	dataFields: ["_id","name","loc"],
+	//Maximum number of results to return with an autocomplete request
+	maximumResults: 10,
+	//MongoDB model (defined earlier) that will be used for autoCompleteFields and dataFields
+	model: Package
+}
+var hotelconfiguration = {
+	//Fields being autocompleted, they will be concatenated
+	autoCompleteFields : [ "name"],
+	//Returned data with autocompleted results
+	dataFields: ["_id","name","loc"],
+	//Maximum number of results to return with an autocomplete request
+	maximumResults: 10,
+	//MongoDB model (defined earlier) that will be used for autoCompleteFields and dataFields
+	model: Hotel
+}
+
+var eventconfiguration = {
+	//Fields being autocompleted, they will be concatenated
+	autoCompleteFields : [ "name"],
+	//Returned data with autocompleted results
+	dataFields: ["_id","name","loc"],
+	//Maximum number of results to return with an autocomplete request
+	maximumResults: 10,
+	//MongoDB model (defined earlier) that will be used for autoCompleteFields and dataFields
+	model: Event
+}
+
+
 //initialization of AutoComplete Module
 try
 {
@@ -643,10 +676,21 @@ try
 		//any calls required after the initialization
 		console.log("Loaded " + myPlacesAutoComplete.getCacheSize() + " words in auto complete");
 	});
-	var myPackageAutoComplete =new AutoComplete(Packageconfiguration, function(){
+	var myPackageAutoComplete =new AutoComplete(packageconfiguration, function(){
 		//any calls required after the initialization
 		console.log("Loaded " + myPackageAutoComplete.getCacheSize() + " words in auto complete");
 	});
+	var myHotelAutoComplete =new AutoComplete(hotelconfiguration, function(){
+		//any calls required after the initialization
+		console.log("Loaded " + myHotelAutoComplete.getCacheSize() + " words in auto complete");
+	});
+
+	var myEventAutoComplete =new AutoComplete(eventconfiguration, function(){
+		//any calls required after the initialization
+		console.log("Loaded " + myEventAutoComplete.getCacheSize() + " words in auto complete");
+	});
+
+
 }
 catch (e)
 {
