@@ -534,7 +534,7 @@ var geoFindFunction =function (req, callback) {
 		try {
  var latitude = parseFloat(req.lat);
  var longitude = parseFloat(req.lon);
-			mongoose.models[req.findTable].ensureIndexes({point:"2dsphere"});
+
 			var point = {
 				type: "Point",
 				coordinates: [latitude,longitude]
@@ -544,32 +544,46 @@ var geoFindFunction =function (req, callback) {
 				//maxDistance: meterConversion.kmToM(req.max),
 				num: 10
 			};
-			if(mongoose.models[req.findTable]!= undefined)
-				var query={};
-				if(query!= undefined)
-				{
-			 query.loc = {
-				$near : {
-					$geometry : {
-						type : "Point",
-						coordinates : [latitude, longitude]
-					},
-				//	$maxDistance : 1000
+
+			mongoose.models[req.findTable].count({}, function (err, count){
+
+				if(count>0){
+					mongoose.models[req.findTable].ensureIndexes({point:"2dsphere"});
+					//document exists });
+					if(mongoose.models[req.findTable]!= undefined)
+						var query={};
+					if(query!= undefined)
+					{
+						query.loc = {
+							$near : {
+								$geometry : {
+									type : "Point",
+									coordinates : [latitude, longitude]
+								},
+								//	$maxDistance : 1000
+							}
+						}
+					};
+					mongoose.models[req.findTable].find(query,function(err,results)
+					{
+						if(err)
+						{
+							console.log("Error:"+err);
+						}
+						else
+						{
+							results.findTable =req.findTable;
+							callback(null, results);
+						}
+					});
 				}
-			}
-				};
-			mongoose.models[req.findTable].find(query,function(err,results)
-			{
-				if(err)
-				{
-					console.log("Error:"+err);
-				}
-				else
-				{
+				else {
+					var results=[];
 					results.findTable =req.findTable;
 					callback(null, results);
 				}
 			});
+
 		}
 		catch (x)
 		{
