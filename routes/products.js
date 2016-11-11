@@ -315,6 +315,8 @@ exports.GetHomePageItems = function (req, res) {
 				var datas = data.map(function (record) {
 					return record.toObject();
 				});
+				datas.findTable =req.findTable;
+				data.count = mongoose.models[req.findTable].count();
 				callback(null, datas);
 
 			});
@@ -359,12 +361,42 @@ exports.GetHomePageItems = function (req, res) {
 					return res.send(400);
 				}
 				var response = {};
-				response.places = results[0] || [];
-				response.hotels = results[1] || [];
-				response.packages = results[2] || [];
-				response.seo = results[2]||[];
+				for(var i=0; i< results.length ; i++)
+				{
+					if(results[i].findTable =="Place")
+					{
+						response.places =results[i]||[];
+						response.places.count = results[i].count;
+					}
+					if(results[i].findTable =="Package")
+					{
+						response.packages =results[i]||[];
+						response.packages.count = results[i].count;
+					}
+					if(results[i].findTable =="Hotel")
+					{
+						response.hotels =results[i]||[];
+						response.hotels.count = results[i].count;
+					}
+					if(results[i].findTable =="Event")
+					{
+						response.events =results[i]||[];
+						response.events.count = results[i].count;
+					}
+					if(results[i].findTable =="User")
+					{
+						response.users =results[i]||[];
+						response.users.count = results[i].count;
+					}
+				}
+			//	response.places = results[0] || [];
+			//	response.hotels = results[1] || [];
+			//	response.packages = results[2] || [];
+			//	response.seo = results[2]||[];
 				return res.send(200, response);
 			});
+
+
 
 	}
 	catch (e)
@@ -392,6 +424,11 @@ exports.GetProducts = function (req, res) {
 		{
 			var table =req.body.payload.findtable;
 			datatable.push(table);
+		}
+		if(req.body.payload.sectionName=="promotion")
+		{
+			datatable.push('Package');
+			datatable.push('Place');
 		}
 		if(req.body.payload.sectionName=="home")
 		{
@@ -449,23 +486,29 @@ else
 						if(results[i].findTable =="Place")
 						{
 							response.places =results[i]||[];
+							response.placesCount = results[i].sizes;
 						}
 						if(results[i].findTable =="Package")
 						{
 							response.packages =results[i]||[];
+							response.packagesCount = results[i].sizes;
 						}
 						if(results[i].findTable =="Hotel")
 						{
 							response.hotels =results[i]||[];
+							response.hotelsCount = results[i].sizes;
 						}
 						if(results[i].findTable =="Event")
 						{
 							response.events =results[i]||[];
+							response.eventsCount = results[i].sizes;
 						}
 						if(results[i].findTable =="User")
 						{
 							response.users =results[i]||[];
+							response.usersCount = results[i].sizes;
 						}
+
 					}
 					//response.places =results[2]||[];
 					//response.packages = results[2] || [];
@@ -506,9 +549,11 @@ var findRequest = getCreateRequest(req);
 				return record.toObject();
 			});
 			datas.findTable =req.findTable;
-			callback(null, datas);
-
-		});
+			mongoose.models[req.findTable].count({}, function(err, c) {
+				datas.sizes = c;
+				callback(null, datas);
+			});
+		}).limit(8);
 		}
 		catch (e)
 		{
@@ -580,6 +625,7 @@ var geoFindFunction =function (req, callback) {
 				else {
 					var results=[];
 					results.findTable =req.findTable;
+					results.sizes = count;
 					callback(null, results);
 				}
 			});

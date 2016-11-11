@@ -127,7 +127,7 @@ var done = false;
 
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, 'images')));
-app.get('/test',product.GetHomePageItems);
+app.post('/test',product.GetProducts);
 app.get('/categories',place.GetCategories);
 app.get('/seo',place.PopulateOffers);
 app.get('/categories/:type/:id/:lat/:long',place.GetPlacesByCategoryId);
