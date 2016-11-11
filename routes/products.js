@@ -543,7 +543,7 @@ var FindFunction =function (req, callback) {
 		try {
 var findRequest = getCreateRequest(req);
 
-		mongoose.models[req.findTable].find(findRequest, function(err, data) {
+		mongoose.models[req.findTable].find(findRequest,{},{sort:{'created_date':-1}}, function(err, data) {
 			if (err) throw err;
 			var datas = data.map(function (record) {
 				return record.toObject();
