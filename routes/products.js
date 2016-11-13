@@ -609,16 +609,18 @@ var geoFindFunction =function (req, callback) {
 							}
 						}
 					};
-					mongoose.models[req.findTable].find(query,function(err,results)
+					mongoose.models[req.findTable].find(query,function(err,data)
 					{
-						if(err)
-						{
-							console.log("Error:"+err);
-						}
+						if (err) throw err;
+
+
 						else
 						{
-							results.findTable =req.findTable;
-							callback(null, results);
+							var datas = data.map(function (record) {
+								return record.toObject();
+							});
+							datas.findTable =req.findTable;
+							callback(null, datas);
 						}
 					});
 				}
@@ -663,7 +665,7 @@ function DesitionEngine(req)
 // Autocomplete configuration
 var configuration = {
 	//Fields being autocompleted, they will be concatenated
-	autoCompleteFields : [ "name"],
+	autoCompleteFields : ["name","city"],
 	//Returned data with autocompleted results
 	dataFields: ["_id","name","loc"],
 	//Maximum number of results to return with an autocomplete request
@@ -673,18 +675,7 @@ var configuration = {
 }
 var packageconfiguration = {
 	//Fields being autocompleted, they will be concatenated
-	autoCompleteFields : [ "name"],
-	//Returned data with autocompleted results
-	dataFields: ["_id","name","loc"],
-	//Maximum number of results to return with an autocomplete request
-	maximumResults: 10,
-	//MongoDB model (defined earlier) that will be used for autoCompleteFields and dataFields
-	model: Package
-}
-
-var hotelconfiguration = {
-	//Fields being autocompleted, they will be concatenated
-	autoCompleteFields : [ "name"],
+	autoCompleteFields : [ "name","title"],
 	//Returned data with autocompleted results
 	dataFields: ["_id","name","loc"],
 	//Maximum number of results to return with an autocomplete request
@@ -694,7 +685,7 @@ var hotelconfiguration = {
 }
 var hotelconfiguration = {
 	//Fields being autocompleted, they will be concatenated
-	autoCompleteFields : [ "name"],
+	autoCompleteFields : [ "name","title"],
 	//Returned data with autocompleted results
 	dataFields: ["_id","name","loc"],
 	//Maximum number of results to return with an autocomplete request
@@ -768,5 +759,62 @@ exports.getTypeAheadPlaceNames = function (req, res) {
 
 	}
 
+}
+
+exports.autocomplete = function (req,res) {
+	if(req.body.payload.searchon!= undefined)
+	{
+
+var regex1 = new RegExp(req.body.payload.search, 'i');
+var searchby =		req.body.payload.searchby;
+
+var st = req.body.payload.searchby;
+var key=req.body.payload.resultKey;
+		var regex = new RegExp(req.body.payload.search, "i")
+			,   query = {};
+		query[searchby] = regex;
+		var fields ={};
+		fields[req.body.payload.searchby] = 1;
+		//fields["loc"] = 1;
+		fields[key]=1;
+
+		mongoose.models[req.body.payload.searchon].find(query,fields, function(err, products) {
+			if (err) {
+				res.json(err);
+			}
+			var datas = products.map(function (record) {
+				var obj = record.toObject();
+				return obj;
+			});
+			res.send(200, JSON.stringify(datas));
+		});
+
+//var query1 = mongoose.models[req.body.payload.searchon].find({searchby: /Th/i}).limit(6);
+	//		if (err) throw err;
+// Execute query in a callback and return users list
+		/*
+query.exec(function(err, users) {
+	if (!err) {
+		// Method to construct the json result set
+		var result = buildResultSet(users);
+		res.send(result, {
+			'Content-Type': 'application/json'
+		}, 200);
+	} else {
+		res.send(JSON.stringify(err), {
+			'Content-Type': 'application/json'
+		}, 404);
+	}
+});
+*/
+	}
+}
+
+buildResultSet = function(docs) {
+	var result = [];
+	for(var object in docs){
+		result.push(docs[object]);
+	}
+	return result;
 }
 
