@@ -704,63 +704,6 @@ var eventconfiguration = {
 	//MongoDB model (defined earlier) that will be used for autoCompleteFields and dataFields
 	model: Event
 }
-
-
-//initialization of AutoComplete Module
-try
-{
-	var myPlacesAutoComplete =new AutoComplete(configuration, function(){
-		//any calls required after the initialization
-		console.log("Loaded " + myPlacesAutoComplete.getCacheSize() + " words in auto complete");
-	});
-	var myPackageAutoComplete =new AutoComplete(packageconfiguration, function(){
-		//any calls required after the initialization
-		console.log("Loaded " + myPackageAutoComplete.getCacheSize() + " words in auto complete");
-	});
-	var myHotelAutoComplete =new AutoComplete(hotelconfiguration, function(){
-		//any calls required after the initialization
-		console.log("Loaded " + myHotelAutoComplete.getCacheSize() + " words in auto complete");
-	});
-
-	var myEventAutoComplete =new AutoComplete(eventconfiguration, function(){
-		//any calls required after the initialization
-		console.log("Loaded " + myEventAutoComplete.getCacheSize() + " words in auto complete");
-	});
-
-
-}
-catch (e)
-{
-	console.log("exception at autocomplete initialization:"+e);
-}
-
-
-exports.getTypeAheadPlaceNames = function (req, res) {
-	if(req.params.searchon!= undefined)
-	{
-		if(req.params.searchon=="Place")
-		{
-			myPlacesAutoComplete.getResults(req.params.search, function (err, words) {
-				if (err)
-					res.json(err);
-				else
-					res.json(words);
-			});
-		}
-		if(req.params.searchon=="Package")
-		{
-			myPackageAutoComplete.getResults(req.params.search, function (err, words) {
-				if (err)
-					res.json(err);
-				else
-					res.json(words);
-			});
-		}
-
-	}
-
-}
-
 exports.autocomplete = function (req,res) {
 	if(req.body.payload.searchon!= undefined)
 	{
