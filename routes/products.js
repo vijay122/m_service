@@ -487,26 +487,31 @@ else
 						{
 							response.places =results[i]||[];
 							response.placesCount = results[i].sizes;
+							response.searchOn = "places";
 						}
 						if(results[i].findTable =="Package")
 						{
 							response.packages =results[i]||[];
 							response.packagesCount = results[i].sizes;
+							response.searchOn = "packages";
 						}
 						if(results[i].findTable =="Hotel")
 						{
 							response.hotels =results[i]||[];
 							response.hotelsCount = results[i].sizes;
+							response.searchOn = "hotels";
 						}
 						if(results[i].findTable =="Event")
 						{
 							response.events =results[i]||[];
 							response.eventsCount = results[i].sizes;
+							response.searchOn = "events";
 						}
 						if(results[i].findTable =="User")
 						{
 							response.users =results[i]||[];
 							response.usersCount = results[i].sizes;
+							response.searchOn = "users";
 						}
 
 					}
