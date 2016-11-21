@@ -14,7 +14,7 @@ exports.updateUser = function (req, res) {
 				password: req.body.payload.password,
 				email: req.body.payload.email,
 				username:req.body.payload.username,
-				phone_number :req.body.payload.phonenumber,
+				_id :req.body.payload.phonenumber,
 			}, function(err, user) {
 				if (err) throw err;
 				console.log(user);
@@ -34,7 +34,7 @@ exports.loadUserInfo = function (req, res) {
 	try
 	{
 		// get the user starlord55
-		User.findOne({ phone_number: req.body.payload.phone_number }, function(err, user) {
+		User.findOne({ _id: req.body.payload.phone_number }, function(err, user) {
 			if (err) throw err;
 
 			// object of the user
@@ -52,20 +52,30 @@ exports.addUser = function (req, res) {
 
 	var firsttimekey ="12345678";// rand.generate(7);
 
+	if(req.body.payload.status)
+	{
+
+	}
+
 	var newUser = User({
-		phone_number: req.body.phone_number,
+		_id: req.body.payload.phone_number,
 		password:firsttimekey
 	});
+	newUser.status = req.body.payload.status!=undefined?req.body.payload.status:"active";
+	newUser.role = req.body.payload.role!= undefined?req.body.payload.role:"user";
+	newUser.company = req.body.payload.company;
 	console.log('Adding user: ' + JSON.stringify(newUser));
 	newUser.save(function(err) {
 		if (err) throw err;
-		if(req.body.supervisor_id!= "" && req.body.supervisor_id && req.body.supervisor_id != req.body.phone_number)
+		if(req.body.payload.supervisor_id!= "" && req.body.payload.supervisor_id && req.body.payload.supervisor_id != req.body.payload.phone_number)
 		{
 			var user ={};
-			user.id =req.body.phone_number;
-			user.name=req.body.name;
-			user.status="Active";
-			User.findOneAndUpdate({ phone_number: req.body.supervisor_id },
+			user.id =req.body.payload.phone_number;
+			user.name=req.body.payload.name;
+			user.status=req.body.payload.status;
+			user.role=req.body.payload.role;
+			user.company=req.body.payload.company;
+			User.findOneAndUpdate({ _id: req.body.payload.supervisor_id },
 			{$push: {"mapped_users": user}}, function(err, user) {
 				if (err) throw err;
 				console.log(user);

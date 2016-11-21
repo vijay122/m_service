@@ -6,12 +6,14 @@ var UserSchema = new Schema({
 	password: String,
 	email: String,
 	username:String,
-	phone_number :String,
-	roles:[{role:String}],
+	_id :String,
+	role:String,
 	mapped_users:[{
 		id:String,
 		name:String,
-		status:String
+		status:String,
+		company:String,
+		role:String,
 	}],
 	supervisor:String,
 	orders: [{ body: String, date: Date }],
