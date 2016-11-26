@@ -268,11 +268,28 @@ exports.addProduct = function (req, res) {
 	{
 		console.log('Adding Place: ' + JSON.stringify(product));
 		var upsertData = product.toObject();
-		Place.findOneAndUpdate({"_id": upsertData._id}, upsertData, {upsert: true}, function(err, result){
+		Place.findOne({"loc.coordinates":upsertData.loc.coordinates}, upsertData, {upsert: false}, function(err, result){
+
+		//	Place.findOneAndUpdate({"loc":upsertData.loc}, upsertData, {upsert: false}, function(err, result){
+
+		//	Place.findOneAndUpdate({$and:[{"_id":{$ne:upsertData._id}},{"loc":upsertData.loc}]}, upsertData, {upsert: false}, function(err, result){
+			//Place.findOneAndUpdate({"_id": upsertData._id}, upsertData, {upsert: true}, function(err, result){
+			if (err) throw err;
+			if(result)
+			{
+
+			}
+
+			console.log('Place created!');
+		});
+		/*
+		Place.findOneAndUpdate({$or:[{"_id":upsertData._id},{$and:[{"_id":{$ne:upsertData._id}},{"loc":upsertData.loc,"state":upsertData.state,"city":upsertData.city}]}]}, upsertData, {upsert: true}, function(err, result){
+			//Place.findOneAndUpdate({"_id": upsertData._id}, upsertData, {upsert: true}, function(err, result){
 			if (err) throw err;
 
 			console.log('Place created!');
 		});
+		*/
 	}
 	if(req.body.payload.type=="event")
 	{
@@ -290,7 +307,6 @@ exports.addProduct = function (req, res) {
 		var upsertData = hotel.toObject();
 		Hotel.findOneAndUpdate({"_id": upsertData._id}, upsertData, {upsert: true}, function(err, result){
 			if (err) throw err;
-
 			console.log('Place created!');
 		});
 	}
@@ -420,6 +436,11 @@ exports.GetProducts = function (req, res) {
 		}
 		var callbackFunctions = [];
 		var datatable=[];
+		if(req.body.payload.sectionName=="refresh")
+		{
+			var table =req.body.payload.findtable;
+			datatable.push(table);
+		}
 		if(req.body.payload.sectionName=="search")
 		{
 			var table =req.body.payload.findtable;
@@ -455,6 +476,7 @@ exports.GetProducts = function (req, res) {
 		var filterrequest ={};// DesitionEngine(req);
 		for (var  i = 0; i < datatable.length; i++ ) {
 
+
 			var request ={};
 			request.findTable = datatable[i];
 			request.lat =req.body.payload.lat;
@@ -464,12 +486,18 @@ exports.GetProducts = function (req, res) {
 			{
 				request._id =req.body.payload.searchvalue;
 			}
-
 			if(req.body.payload.lat==undefined && req.body.payload.sectionName!= undefined)
 			{
-				callbackFunctions.push(FindFunction(request));
+				if(req.body.payload.sectionName!="refresh")
+				{
+					callbackFunctions.push(FindFunction(request));
+				}
+				if(req.body.payload.sectionName=="refresh")
+				{
+					callbackFunctions.push(FindByIDAndThenNearby(request));
+				}
 			}
-else
+			else
 			{
 				callbackFunctions.push(geoFindFunction(request));
 			}
@@ -541,6 +569,67 @@ var getCreateRequest= function(req)
 	if(req._id != undefined)
 	reqFormat._id = req._id;
 	return reqFormat;
+}
+
+var FindByIDAndThenNearby =function (req, callback) {
+	return function (callback) {
+		try {
+			var findRequest = getCreateRequest(req);
+			mongoose.models[req.findTable].find(findRequest, {}, {sort: {'created_date': -1}}, function (err, data) {
+				if (err) throw err;
+				var datas = data.map(function (record) {
+					return record.toObject();
+				});
+				var location = datas[0].loc;
+				var latitude = location.coordinates[0];
+				var longitude = location.coordinates[1];
+
+				var point = {
+					type: "Point",
+					coordinates: [latitude, longitude]
+				};
+				var geoOptions = {
+					spherical: true,
+					//maxDistance: meterConversion.kmToM(req.max),
+					num: 10
+				};
+				mongoose.models[req.findTable].ensureIndexes({point: "2dsphere"});
+				//document exists });
+				if (mongoose.models[req.findTable] != undefined)
+					var query = {};
+				if (query != undefined) {
+					query.loc = {
+						$near: {
+							$geometry: {
+								type: "Point",
+								coordinates: [latitude, longitude]
+							},
+							$minDistance: 0,
+							$maxDistance: 5000
+							//	$maxDistance : 1000
+						}
+					}
+				}
+				mongoose.models[req.findTable].find(query, function (err, data) {
+					if (err) throw err;
+
+
+					else {
+						var datas = data.map(function (record) {
+							return record.toObject();
+						});
+						datas.findTable = req.findTable;
+						callback(null, datas);
+					}
+				});
+			});
+
+		}
+		catch (e) {
+			console.log("Exception in FindFunction:" + e);
+		}
+
+	}
 }
 
 var FindFunction =function (req, callback) {
