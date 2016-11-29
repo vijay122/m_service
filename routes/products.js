@@ -268,12 +268,12 @@ exports.addProduct = function (req, res) {
 	{
 		console.log('Adding Place: ' + JSON.stringify(product));
 		var upsertData = product.toObject();
-		Place.findOne({"loc.coordinates":upsertData.loc.coordinates}, upsertData, {upsert: false}, function(err, result){
+		//Place.findOne({"loc.coordinates":upsertData.loc.coordinates}, upsertData, {upsert: false}, function(err, result){
 
 		//	Place.findOneAndUpdate({"loc":upsertData.loc}, upsertData, {upsert: false}, function(err, result){
 
 		//	Place.findOneAndUpdate({$and:[{"_id":{$ne:upsertData._id}},{"loc":upsertData.loc}]}, upsertData, {upsert: false}, function(err, result){
-			//Place.findOneAndUpdate({"_id": upsertData._id}, upsertData, {upsert: true}, function(err, result){
+			Place.findOneAndUpdate({"_id": upsertData._id}, upsertData, {upsert: true}, function(err, result){
 			if (err) throw err;
 			if(result)
 			{
