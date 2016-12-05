@@ -14,7 +14,6 @@ function randomValueHex (len) {
 
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
-
 var ProductSchema = new Schema({
 	name: String,
 	title:String,
@@ -115,6 +114,9 @@ var Hotel = mongoose.model('Hotel', ProductSchema);
 var Package = mongoose.model('Package', PackageSchema);
 
 
+var ShoppingCartSchema = new Schema({}, { strict: false });
+var ShoppingCart = mongoose.model('ShoppingCart', ShoppingCartSchema);
+
 var connectionString = 'mongodb://root:Vjy4livelytrips@192.169.149.245:27017/placesDB?authSource=admin';
 
 mongoose.createConnection(connectionString);
@@ -149,6 +151,75 @@ function generate_id(req) {
 	}
 	res = res.replace(/\s+/g, '');
 	return res;
+}
+
+function getHotels(productlist)
+{
+var	hotels=[];
+	for(var i=0; i<productlist.length;i++)
+	{
+		if(productlist[i].type=="hotel")
+		{
+			hotels.push(productlist[i]);
+		}
+	}
+}
+
+function getStates(productlist)
+{
+	var states=[];
+	for(var i=0; i<productlist.length;i++)
+	{
+		if(states.hasOwnProperty())
+		if(productlist[i].state=="hotel")
+		{
+			hotels.push(productlist[i]);
+		}
+	}
+}
+
+Array.prototype.getState = function(product)
+{
+	if( product.hasOwnProperty(state))
+	{
+		return product.get(state);
+	}
+}
+
+
+function isCrossState(productlist)
+{
+	return false;
+}
+
+function validateLocations(productlist)
+{
+	for(var i=0;i<productlist.length; i++)
+	{
+
+	}
+	return true;
+}
+exports.profilePackage = function(req,res)
+{
+	validateLocations();
+}
+exports.validatePackage = function(req,res)
+{
+	var totaldistances;
+	var totalstates;
+	var totalnumberofnights;
+	var totalstays;
+	validateLocations();
+}
+exports.placeOrder = function (req, res) {
+	var package ={};
+	var event={};
+	var hotel={};
+
+	var cartItems = req.body.payload.products;
+	var cart = new ShoppingCart({ cartItems: true });
+	cart.save() // cartItems is now saved to the db!!
 }
 
 exports.addProduct = function (req, res) {
