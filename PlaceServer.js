@@ -148,6 +148,7 @@ app.post('/viewmore', place.getNearbyPlaces);
 app.get('/autocomplete/:searchon/:search',product.autocomplete);
 app.post('/complete',product.autocomplete);
 app.get('/isready',place.getstatus);
+app.post('/prepareCart',product.validatePackage);
 app.post('/submitOrder',product.placeOrder);
 
 app.post('/SendCallbackMessage/:tn', Touringutility.SendMessage);

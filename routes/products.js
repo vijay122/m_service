@@ -206,6 +206,11 @@ exports.profilePackage = function(req,res)
 }
 exports.validatePackage = function(req,res)
 {
+		var package ={};
+		var event={};
+		var hotel={};
+
+		var cartItems = req.body.payload.products;
 	var totaldistances;
 	var totalstates;
 	var totalnumberofnights;
@@ -218,7 +223,7 @@ exports.placeOrder = function (req, res) {
 	var hotel={};
 
 	var cartItems = req.body.payload.products;
-	var cart = new ShoppingCart({ cartItems: true });
+	var cart = new ShoppingCart(cartItems);
 	cart.save() // cartItems is now saved to the db!!
 }
 
