@@ -141,6 +141,7 @@ app.get('/getTemperature/:location', place.getTemperature);
 app.post('/getProducts', product.GetProducts);
 app.post('/geoCode', place.GeoCode);
 app.post('/login', user.loadUserInfo);
+app.post('/disableUser', user.disableUser);
 app.post('/register', user.addUser);
 app.post('/updateuser', user.updateUser);
 app.post('/getTemperature/:location', place.getTemperature);

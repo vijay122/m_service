@@ -85,3 +85,22 @@ exports.addUser = function (req, res) {
 		console.log('User created!');
 	});
 }
+
+exports.disableUser = function (req, res) {
+	try
+	{
+		// get the user and set as inactive
+		User.findOneAndUpdate({ _id: req.body.payload.disableUserId,status:"inactive" }, function(err, user) {
+			if (err) throw err;
+
+			// object of the user
+			var s = user.toObject();
+			return res.send(200, JSON.stringify(s));
+		});
+	}
+	catch (e)
+	{
+		console.log(' user details fetch error: ');
+		console.log(e);
+	}
+}

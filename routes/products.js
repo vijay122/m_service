@@ -165,27 +165,35 @@ var	hotels=[];
 	}
 }
 
-function getStates(productlist)
+Array.prototype.getStays=function()
 {
-	var states=[];
-	for(var i=0; i<productlist.length;i++)
+	var stays=[];
+	for(var i=0; i<this.length;i++)
 	{
-		if(states.hasOwnProperty())
-		if(productlist[i].state=="hotel")
+		if(this[i].type=="hotel")
 		{
-			hotels.push(productlist[i]);
+		var checkin =	this[i].checkin;
+		var checkout = this[i].checkout;
+		var hotel = this[i];
+		hotel.checkin = checkin;
+		hotel.checkout = checkout;
+			stays.push(hotel);
 		}
 	}
+	return stays;
 }
 
-Array.prototype.getState = function(product)
+Array.prototype.getTripStates = function()
 {
-	if( product.hasOwnProperty(state))
+	var states =[];
+	for(var i=0; i< this.length; i++)
 	{
-		return product.get(state);
+		if(this[i].state && states.indexOf(this[i].state) == -1)
+		//if( states) // this[i].state should not exist in the states array
+				states.push(this[i].state);
 	}
+	return states;
 }
-
 
 function isCrossState(productlist)
 {
@@ -206,16 +214,47 @@ exports.profilePackage = function(req,res)
 }
 exports.validatePackage = function(req,res)
 {
-		var package ={};
-		var event={};
-		var hotel={};
-
-		var cartItems = req.body.payload.products;
+	var package ={};
+	var event={};
+	var hotel={};
+    var tripInfo = req.body.payload.tripInfo;
+	var cartItems = req.body.payload.products;
 	var totaldistances;
 	var totalstates;
 	var totalnumberofnights;
 	var totalstays;
+
+	totalstates = cartItems.getTripStates();
+	totalstays = cartItems.getStays();
+	var start = tripInfo.fromdate;
+	var end = tripInfo.todate;
+
 	validateLocations();
+}
+
+
+function markCalender(instance,item,calender) {
+
+	var calender = getGoogleCalender(); //get calender instance and mark items
+	var conflicts =[];
+	if(freeSlot)
+	{
+		calender.date["dateslot"]["timeslot"] = instance;
+	}
+	else
+	{
+		conflicts.push(instance);
+	}
+	return calender;
+}
+
+function createCalender(calenderItems)
+{
+	var calender = GetCalenderDates();
+	for(var i=0; i<calenderItems.length;i++)
+	{
+		markCalender(instance, item,calender);
+	}
 }
 exports.placeOrder = function (req, res) {
 	var package ={};
@@ -500,7 +539,7 @@ exports.GetHomePageItems = function (req, res) {
 exports.GetProducts = function (req, res) {
 	try
 	{
-
+		var seoTable =[];
 		var noOfRecords=0;
 		if(req.body.payload.noOfRecords!= undefined)
 		{
@@ -880,6 +919,7 @@ exports.autocomplete = function (req,res) {
 
 var regex1 = new RegExp(req.body.payload.search, 'i');
 var searchby =		req.body.payload.searchby;
+var nofilter =		req.body.payload.nofilter;
 
 var st = req.body.payload.searchby;
 var key=req.body.payload.resultKey;
@@ -887,10 +927,11 @@ var key=req.body.payload.resultKey;
 			,   query = {};
 		query[searchby] = regex;
 		var fields ={};
-		fields[req.body.payload.searchby] = 1;
-		//fields["loc"] = 1;
-		fields[key]=1;
-
+		if(nofilter!= "true") {
+			fields[req.body.payload.searchby] = 1;
+			//fields["loc"] = 1;
+			fields[key] = 1;
+		}
 		mongoose.models[req.body.payload.searchon].find(query,fields, function(err, products) {
 			if (err) {
 				res.json(err);
