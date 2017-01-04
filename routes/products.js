@@ -82,6 +82,7 @@ var PackageSchema = new Schema({
 	state:String,
 	pincode:String,
 	country:String,
+	products:[],
 	assets:
 	{
 		display:String,
@@ -368,6 +369,7 @@ exports.addProduct = function (req, res) {
 			landmark: req.body.payload.landmark,
 			assets:req.body.payload.assets,
 			price: req.body.payload.price,
+			products:req.body.payload.products,
 			sale: [{
 				salePrice: 0,
 				saleEndDate: Date.now(),
