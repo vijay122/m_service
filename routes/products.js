@@ -118,7 +118,7 @@ var Package = mongoose.model('Package', PackageSchema);
 var ShoppingCartSchema = new Schema({}, { strict: false });
 var ShoppingCart = mongoose.model('ShoppingCart', ShoppingCartSchema);
 
-var connectionString = 'mongodb://root:Vjy4livelytrips@192.169.149.245:27017/placesDB?authSource=admin';
+var connectionString = 'mongodb://root:Vjy4livelytrips@148.72.246.39:27017/placesDB?authSource=admin';
 
 mongoose.createConnection(connectionString);
 
@@ -266,7 +266,6 @@ exports.placeOrder = function (req, res) {
 	var cart = new ShoppingCart(cartItems);
 	cart.save() // cartItems is now saved to the db!!
 }
-
 exports.addProduct = function (req, res) {
 	var package ={};
 	var event={};
@@ -749,6 +748,56 @@ var FindByIDAndThenNearby =function (req, callback) {
 	}
 }
 
+var FindCategoryAndCount = function(req,callback)
+{
+}
+
+var GetScripts = function (req,callback) {
+	return function (callback) {
+		try {
+			var findRequest = getCreateRequest(req);
+
+			mongoose.models[req.findTable].find(findRequest, {}, {sort: {'created_date': -1}}, function (err, data) {
+				if (err) throw err;
+				var datas = data.map(function (record) {
+					return record.toObject();
+				});
+				datas.findTable = req.findTable;
+				mongoose.models[req.findTable].count({}, function (err, c) {
+					datas.sizes = c;
+					callback(null, datas);
+				});
+			});
+		}
+		catch (e) {
+			console.log("Exception in FindFunction:" + e);
+		}
+	}
+}
+
+var FindCountFunction = function (req,callback) {
+	return function (callback) {
+		try {
+			var findRequest = getCreateRequest(req);
+
+			mongoose.models[req.findTable].find(findRequest, {}, {sort: {'created_date': -1}}, function (err, data) {
+				if (err) throw err;
+				var datas = data.map(function (record) {
+					return record.toObject();
+				});
+				datas.findTable = req.findTable;
+				mongoose.models[req.findTable].count({}, function (err, c) {
+					datas.sizes = c;
+					callback(null, datas);
+				});
+			});
+		}
+		catch (e) {
+			console.log("Exception in FindFunction:" + e);
+		}
+	}
+}
+
 var FindFunction =function (req, callback) {
 	return  function(callback) {
 		try {
@@ -972,5 +1021,123 @@ buildResultSet = function(docs) {
 		result.push(docs[object]);
 	}
 	return result;
+}
+
+exports.FetchUpdatedAppDataCountAndScripts = function (req, res) {
+	try
+	{
+		var seoTable =[];
+		var noOfRecords=0;
+		var callbackFunctions = [];
+		var datatable=[];
+		if(req.body.payload.sectionName=="refresh")
+		{
+			var table =req.body.payload.findtable;
+			datatable.push(table);
+		}
+		if(req.body.payload.sectionName=="search")
+		{
+			var table =req.body.payload.findtable;
+			datatable.push(table);
+		}
+		if(req.body.payload.sectionName=="promotion")
+		{
+			datatable.push('Package');
+			datatable.push('Place');
+		}
+		if(req.body.payload.sectionName=="home")
+		{
+			datatable.push('Hotel');
+			datatable.push('Place');
+			datatable.push('Package');
+			datatable.push('Event');
+		}
+		if(req.body.payload.sectionName=="detail")
+		{
+			datatable.push('Hotel');
+			datatable.push('Place');
+			datatable.push('Package');
+			datatable.push('Event');
+		}
+		if(req.body.payload.sectionName=="admin")
+		{
+			datatable.push('Hotel');
+			datatable.push('Place');
+			datatable.push('Package');
+			datatable.push('Event');
+			datatable.push('User');
+		}
+		var filterrequest ={};// DesitionEngine(req);
+		for (var  i = 0; i < datatable.length; i++ ) {
+
+
+			var request ={};
+			request.findTable = datatable[i];
+			request.lat =req.body.payload.lat;
+			request.lon= req.body.payload.lon;
+			request.max = req.body.payload.max;
+			if(req.body.payload.searchby =="_id")
+			{
+				request._id =req.body.payload.searchvalue;
+			}
+			if(req.body.payload.lat==undefined && req.body.payload.sectionName!= undefined)
+			{
+					callbackFunctions.push(FindCountFunction(request));
+			}
+		}
+		Async.parallel(
+			callbackFunctions,
+			function(err,results) {
+				// exports.comments(req, res); //render a view
+				try {
+
+					var response = {};
+					for(var i=0; i< results.length ; i++)
+					{
+						if(results[i].findTable =="Place")
+						{
+							response.places =results[i]||[];
+							response.placesCount = results[i].sizes;
+							response.searchOn = "places";
+						}
+						if(results[i].findTable =="Package")
+						{
+							response.packages =results[i]||[];
+							response.packagesCount = results[i].sizes;
+							response.searchOn = "packages";
+						}
+						if(results[i].findTable =="Hotel")
+						{
+							response.hotels =results[i]||[];
+							response.hotelsCount = results[i].sizes;
+							response.searchOn = "hotels";
+						}
+						if(results[i].findTable =="Event")
+						{
+							response.events =results[i]||[];
+							response.eventsCount = results[i].sizes;
+							response.searchOn = "events";
+						}
+						if(results[i].findTable =="User")
+						{
+							response.users =results[i]||[];
+							response.usersCount = results[i].sizes;
+							response.searchOn = "users";
+						}
+
+					}
+					if (response != "Not Found" && typeof response == "object")
+						res.send(200, JSON.stringify(response));
+				}
+				catch(e)
+				{
+					console.log("Exception in callback "+e);
+				}
+			});
+	}
+	catch (e)
+	{
+		console.log("exception in get products:"+ e);
+	}
 }
 
