@@ -128,27 +128,27 @@ var done = false;
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, 'images')));
 app.post('/test',product.GetProducts);
-app.get('/categories',place.GetCategories);
-app.get('/seo',place.PopulateOffers);
-app.get('/categories/:type/:id/:lat/:long',place.GetPlacesByCategoryId);
+//app.get('/categories',place.GetCategories);
+//app.get('/seo',place.PopulateOffers);
+//app.get('/categories/:type/:id/:lat/:long',place.GetPlacesByCategoryId);
 //app.get('/places', place.findAll);
-app.get('/loadplace/:id', place.GetPlaceDetailsByPlaceID);
-app.post('/places', place.addPlace);
-app.post('/places/LoadScrollers', place.LoadScrollImages);
+//app.get('/loadplace/:id', place.GetPlaceDetailsByPlaceID);
+//app.post('/places', place.addPlace);
+//app.post('/places/LoadScrollers', place.LoadScrollImages);
 app.post('/Save', product.addProduct);
-app.get('/getTemperature/:location', place.getTemperature);
+//app.get('/getTemperature/:location', place.getTemperature);
 //app.get('/getRecommendationsforseason', place.GetBestOffers);
 app.post('/getProducts', product.GetProducts);
-app.post('/geoCode', place.GeoCode);
+//app.post('/geoCode', place.GeoCode);
 app.post('/login', user.loadUserInfo);
 app.post('/disableUser', user.disableUser);
 app.post('/register', user.addUser);
 app.post('/updateuser', user.updateUser);
-app.post('/getTemperature/:location', place.getTemperature);
-app.post('/viewmore', place.getNearbyPlaces);
+//app.post('/getTemperature/:location', place.getTemperature);
+//app.post('/viewmore', place.getNearbyPlaces);
 app.get('/autocomplete/:searchon/:search',product.autocomplete);
 app.post('/complete',product.autocomplete);
-app.get('/isready',place.getstatus);
+//app.get('/isready',place.getstatus);
 app.post('/prepareCart',product.validatePackage);
 app.post('/submitOrder',product.placeOrder);
 
@@ -158,8 +158,8 @@ app.post('/SendCallbackMessage/:tn', Touringutility.SendMessage);
 
 app.get('/index', function (request, response) {
 });
-app.put('/places/:id', place.updatePlace);
-app.delete('/places/:id', place.deletePlace);
+//app.put('/places/:id', place.updatePlace);
+//app.delete('/places/:id', place.deletePlace);
 
 var Server = http.createServer(app);
 

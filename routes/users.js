@@ -1,8 +1,8 @@
 var mongoose = require('mongoose');
 var User = require('../models/user');
-var connectionString = 'mongodb://root:Vjy4livelytrips@192.169.149.245:27017/placesDB?authSource=admin';
+var connectionString = 'mongodb://root:Vjy4livelytrips@148.72.246.39:27017/placesDB?authSource=admin';
 
-mongoose.connect('mongodb://root:Vjy4livelytrips@192.169.149.245:27017/placesDB?authSource=admin');
+mongoose.connect('mongodb://root:Vjy4livelytrips@148.72.246.39:27017/placesDB?authSource=admin');
 
 exports.updateUser = function (req, res) {
 	try
