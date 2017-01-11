@@ -103,7 +103,7 @@ var PackageSchema = new Schema({
 	season: String,
 });
 
-
+//db.packages.aggregate( [ { $unwind: "$category" },  { $sortByCount: "$category" } ] )
 ProductSchema.index({ loc : '2dsphere' });
 
 var Event = mongoose.model('Event', EventSchema);
@@ -566,6 +566,7 @@ exports.GetProducts = function (req, res) {
 		{
 			datatable.push('Package');
 			datatable.push('Place');
+
 		}
 		if(req.body.payload.sectionName=="home")
 		{
@@ -612,6 +613,11 @@ exports.GetProducts = function (req, res) {
 				{
 					callbackFunctions.push(FindByIDAndThenNearby(request));
 				}
+				if(req.body.payload.sectionName=="promotion")
+				{
+				//	callbackFunctions.push(FindCountFunction(request));
+				}
+
 			}
 			else
 			{
@@ -780,16 +786,13 @@ var FindCountFunction = function (req,callback) {
 		try {
 			var findRequest = getCreateRequest(req);
 
-			mongoose.models[req.findTable].find(findRequest, {}, {sort: {'created_date': -1}}, function (err, data) {
+			Package.aggregate( [ { $unwind: "$category" },  { $sortByCount: "$category" } ],function(err,data){
 				if (err) throw err;
 				var datas = data.map(function (record) {
 					return record.toObject();
 				});
-				datas.findTable = req.findTable;
-				mongoose.models[req.findTable].count({}, function (err, c) {
-					datas.sizes = c;
-					callback(null, datas);
-				});
+				callback(null, datas);
+
 			});
 		}
 		catch (e) {
@@ -1082,7 +1085,7 @@ exports.FetchUpdatedAppDataCountAndScripts = function (req, res) {
 			}
 			if(req.body.payload.lat==undefined && req.body.payload.sectionName!= undefined)
 			{
-					callbackFunctions.push(FindCountFunction(request));
+					//callbackFunctions.push(FindCountFunction(request));
 			}
 		}
 		Async.parallel(

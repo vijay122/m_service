@@ -152,6 +152,8 @@ app.get('/isready',place.getstatus);
 app.post('/prepareCart',product.validatePackage);
 app.post('/submitOrder',product.placeOrder);
 
+//app.post('/test',product.FetchUpdatedAppDataCountAndScripts);
+
 app.post('/SendCallbackMessage/:tn', Touringutility.SendMessage);
 
 app.get('/index', function (request, response) {
