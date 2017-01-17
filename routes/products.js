@@ -103,6 +103,10 @@ var PackageSchema = new Schema({
 	season: String,
 });
 
+var AppScriptsSchema = new Schema({
+	CategoryCount : []
+});
+
 //db.packages.aggregate( [ { $unwind: "$category" },  { $sortByCount: "$category" } ] )
 ProductSchema.index({ loc : '2dsphere' });
 
@@ -113,6 +117,8 @@ var Place = mongoose.model('Place', ProductSchema);
 var Hotel = mongoose.model('Hotel', ProductSchema);
 
 var Package = mongoose.model('Package', PackageSchema);
+
+var AppScripts = mongoose.model('AppScripts',AppScriptsSchema);
 
 
 var ShoppingCartSchema = new Schema({}, { strict: false });
@@ -566,7 +572,7 @@ exports.GetProducts = function (req, res) {
 		{
 			datatable.push('Package');
 			datatable.push('Place');
-
+			datatable.push('AppScripts');
 		}
 		if(req.body.payload.sectionName=="home")
 		{
@@ -574,6 +580,7 @@ exports.GetProducts = function (req, res) {
 			datatable.push('Place');
 			datatable.push('Package');
 			datatable.push('Event');
+
 		}
 		if(req.body.payload.sectionName=="detail")
 		{
@@ -592,8 +599,6 @@ exports.GetProducts = function (req, res) {
 		}
 		var filterrequest ={};// DesitionEngine(req);
 		for (var  i = 0; i < datatable.length; i++ ) {
-
-
 			var request ={};
 			request.findTable = datatable[i];
 			request.lat =req.body.payload.lat;
@@ -613,9 +618,9 @@ exports.GetProducts = function (req, res) {
 				{
 					callbackFunctions.push(FindByIDAndThenNearby(request));
 				}
-				if(req.body.payload.sectionName=="promotion")
+				if(req.body.payload.sectionName=="promotion1")
 				{
-				//	callbackFunctions.push(FindCountFunction(request));
+					callbackFunctions.push(FindCountFunction(request));
 				}
 
 			}
@@ -644,6 +649,12 @@ exports.GetProducts = function (req, res) {
 							response.packages =results[i]||[];
 							response.packagesCount = results[i].sizes;
 							response.searchOn = "packages";
+						}
+						if(results[i].findTable =="AppScripts")
+						{
+							response.appscripts =results[i]||[];
+							response.appScriptsCount = results[i].sizes;
+							response.searchOn = "appscripts";
 						}
 						if(results[i].findTable =="Hotel")
 						{
@@ -788,10 +799,19 @@ var FindCountFunction = function (req,callback) {
 
 			Package.aggregate( [ { $unwind: "$category" },  { $sortByCount: "$category" } ],function(err,data){
 				if (err) throw err;
-				var datas = data.map(function (record) {
-					return record.toObject();
-				});
-				callback(null, datas);
+			//	var AppScripts = mongoose.model('AppScripts',AppScriptsSchema);
+				AppScripts.remove({}, function(err) {
+						if (err) {
+							console.log(err)
+						} else {
+							AppScripts.create({ CategoryCount: data }, function (err, small) {
+								if (err) return handleError(err);
+								// saved!
+							})
+						}
+					}
+				);
+				callback(null, data);
 
 			});
 		}
@@ -970,14 +990,13 @@ var eventconfiguration = {
 exports.autocomplete = function (req,res) {
 	if(req.body.payload.searchon!= undefined)
 	{
-
-var regex1 = new RegExp(req.body.payload.search, 'i');
+//var regex1 = new RegExp(req.body.payload.search, 'i');
 var searchby =		req.body.payload.searchby;
 var nofilter =		req.body.payload.nofilter;
 
 var st = req.body.payload.searchby;
 var key=req.body.payload.resultKey;
-		var regex = new RegExp(req.body.payload.search, "i")
+		var regex = new RegExp("^"+req.body.payload.search, "i")
 			,   query = {};
 		query[searchby] = regex;
 		var fields ={};
