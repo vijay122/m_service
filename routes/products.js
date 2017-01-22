@@ -571,7 +571,7 @@ exports.GetProducts = function (req, res) {
 		if(req.body.payload.sectionName=="promotion")
 		{
 			datatable.push('Package');
-			datatable.push('Place');
+			//datatable.push('Place');
 			datatable.push('AppScripts');
 		}
 		if(req.body.payload.sectionName=="home")
@@ -622,7 +622,6 @@ exports.GetProducts = function (req, res) {
 				{
 					callbackFunctions.push(FindCountFunction(request));
 				}
-
 			}
 			else
 			{
@@ -1010,11 +1009,18 @@ var key=req.body.payload.resultKey;
 				res.json(err);
 			}
 			var datas = products.map(function (record) {
+			//	var distinctArr =[];
+
 				var obj = record.toObject();
 				return obj;
 			});
+			//var unique = datas.filter( onlyUnique );
 			res.send(200, JSON.stringify(datas));
 		});
+
+		function onlyUnique(value, index, self) {
+			return self.indexOf(value.city) === index;
+		}
 
 //var query1 = mongoose.models[req.body.payload.searchon].find({searchby: /Th/i}).limit(6);
 	//		if (err) throw err;
