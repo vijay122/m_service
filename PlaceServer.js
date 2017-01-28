@@ -5,7 +5,7 @@ var express = require('express'),
 	user = require('./routes/users'),
 	product = require('./routes/products'),
     Touringutility = require('./routes/utils');
-
+var compression = require('compression')
 var busboy = require('connect-busboy'); //middleware for form/file
 var bodyParser = require('body-parser');
 var multer = require('multer');
@@ -28,7 +28,7 @@ var app = express();
 var named = '';
 
 
-
+app.use(compression({filter: shouldCompress}))
 app.use(busboy());
 //app.use(express.static(path.join(__dirname, 'public')));
 
@@ -166,3 +166,13 @@ var Server = http.createServer(app);
 Server.listen(app.get('port'), function () {
     console.log("Express server listening on port " + app.get('port'));
 });
+
+function shouldCompress (req, res) {
+	if (req.headers['x-no-compression']) {
+		// don't compress responses with this request header
+		return false
+	}
+
+	// fallback to standard filter function
+	return compression.filter(req, res)
+}

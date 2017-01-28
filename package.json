@@ -4,7 +4,7 @@
   "description": "A tour server application",
   "main": "PlaceServer.js",
   "scripts": {
-    "prod":"sudo node ./PlaceServer.js",
+    "prod": "sudo node ./PlaceServer.js",
     "test": "pl",
     "start": "babel-node ./PlaceServer.js",
     "deploy": "gcloud preview app deploy"
@@ -26,6 +26,7 @@
     "babel-core": "^6.3.15",
     "body-parser": "^1.15.0",
     "cloudinary": "^1.4.1",
+    "compression": "^1.6.2",
     "connect-busboy": "0.0.2",
     "crypto": "0.0.3",
     "express": "^4.13.4",
