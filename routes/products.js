@@ -270,7 +270,20 @@ exports.placeOrder = function (req, res) {
 
 	var cartItems = req.body.payload.products;
 	var cart = new ShoppingCart(cartItems);
-	cart.save() // cartItems is now saved to the db!!
+	cart.save(); // cartItems is now saved to the db!!
+}
+exports.getOrders = function(req,res) {
+	mongoose.models['ShoppingCart'].find( function (err, data) {
+		if (err) throw err;
+
+
+		else {
+			var datas = data.map(function (record) {
+				return record.toObject();
+			});
+			return res.send(200, datas);
+		}
+});
 }
 exports.addProduct = function (req, res) {
 	var package ={};
@@ -791,12 +804,16 @@ var GetScripts = function (req,callback) {
 	}
 }
 
-var FindCountFunction = function (req,callback) {
-	return function (callback) {
+exports.FindCountFunction = function (req,callback) {
+//	return function (callback) {
 		try {
 			var findRequest = getCreateRequest(req);
 
-			Package.aggregate( [ { $unwind: "$category" },  { $sortByCount: "$category" } ],function(err,data){
+			Package.aggregate( [
+				{
+					$unwind: "$category"
+					//$project: {'display':1}
+				},  { $sortByCount: "$category" } ],function(err,data){
 				if (err) throw err;
 			//	var AppScripts = mongoose.model('AppScripts',AppScriptsSchema);
 				AppScripts.remove({}, function(err) {
@@ -812,12 +829,13 @@ var FindCountFunction = function (req,callback) {
 				);
 				callback(null, data);
 
-			});
+			}
+			);
 		}
 		catch (e) {
 			console.log("Exception in FindFunction:" + e);
 		}
-	}
+	//}
 }
 
 var FindFunction =function (req, callback) {
