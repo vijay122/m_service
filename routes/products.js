@@ -901,7 +901,7 @@ var geoFindFunction =function (req, callback) {
 			//document exists });
 			if (mongoose.models[req.findTable] != undefined)
 				var query = {};
-			if (query != undefined) {
+			if (query != undefined && !isNaN(latitude)) {
 				query.loc = {
 					$near: {
 						$geometry: {
