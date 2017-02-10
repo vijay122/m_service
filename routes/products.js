@@ -896,7 +896,7 @@ var geoFindFunction =function (req, callback) {
 			};
 	mongoose.models[req.findTable].count({}, function (err, count) {
 
-		if (count > 0) {
+		if (count > 0) git {
 			mongoose.models[req.findTable].ensureIndexes({point: "2dsphere"});
 			//document exists });
 			if (mongoose.models[req.findTable] != undefined)
@@ -912,11 +912,8 @@ var geoFindFunction =function (req, callback) {
 					}
 				}
 			}
-			;
 			mongoose.models[req.findTable].find(query, function (err, data) {
 				if (err) throw err;
-
-
 				else {
 					var datas = data.map(function (record) {
 						return record.toObject();
