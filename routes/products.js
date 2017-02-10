@@ -896,7 +896,7 @@ var geoFindFunction =function (req, callback) {
 			};
 	mongoose.models[req.findTable].count({}, function (err, count) {
 
-		if (count > 0) git {
+		if (count > 0) {
 			mongoose.models[req.findTable].ensureIndexes({point: "2dsphere"});
 			//document exists });
 			if (mongoose.models[req.findTable] != undefined)
