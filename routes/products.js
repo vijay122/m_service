@@ -104,7 +104,8 @@ var PackageSchema = new Schema({
 });
 
 var AppScriptsSchema = new Schema({
-	CategoryCount : []
+	CategoryCount : [],
+	SectionScripts:{}
 });
 
 //db.packages.aggregate( [ { $unwind: "$category" },  { $sortByCount: "$category" } ] )
@@ -631,9 +632,9 @@ exports.GetProducts = function (req, res) {
 				{
 					callbackFunctions.push(FindByIDAndThenNearby(request));
 				}
-				if(req.body.payload.sectionName=="promotion1")
+				if(req.body.payload.sectionName=="promotion")
 				{
-					callbackFunctions.push(FindCountFunction(request));
+					callbackFunctions.push(geoFindFunction(request));
 				}
 			}
 			else
@@ -805,36 +806,40 @@ var GetScripts = function (req,callback) {
 }
 
 exports.FindCountFunction = function (req,callback) {
-//	return function (callback) {
+	//return function (callback) {
 		try {
 			var findRequest = getCreateRequest(req);
-
-			Package.aggregate( [
-				{
-					$unwind: "$category"
-					//$project: {'display':1}
-				},  { $sortByCount: "$category" } ],function(err,data){
-				if (err) throw err;
-			//	var AppScripts = mongoose.model('AppScripts',AppScriptsSchema);
-				AppScripts.remove({}, function(err) {
-						if (err) {
-							console.log(err)
-						} else {
-							AppScripts.create({ CategoryCount: data }, function (err, small) {
-								if (err) return handleError(err);
-								// saved!
-							})
+var script ={};
+script.packages="Upto 50% offer in north india tours.";
+script.hotels="Book a premium hotel now before 15th this month and get a chance to fly france";
+script.events="Buy 1 ticket to Champions league and get 1 ticket absolutely free.";
+			Package.aggregate([
+					{
+						$unwind: "$category"
+						//$project: {'display':1}
+					}, {$sortByCount: "$category"}], function (err, data) {
+					if (err) throw err;
+					//	var AppScripts = mongoose.model('AppScripts',AppScriptsSchema);
+					AppScripts.remove({}, function (err) {
+							if (err) {
+								console.log(err)
+							} else {
+								AppScripts.create({CategoryCount: data,SectionScripts:script}, function (err, small) {
+									if (err) return handleError(err);
+									// saved!
+								})
+							}
 						}
-					}
-				);
-				callback(null, data);
+					);
+					//callback(null, data);
 
-			}
+				}
 			);
 		}
 		catch (e) {
 			console.log("Exception in FindFunction:" + e);
 		}
+		//}
 	//}
 }
 
@@ -889,49 +894,45 @@ var geoFindFunction =function (req, callback) {
 				//maxDistance: meterConversion.kmToM(req.max),
 				num: 10
 			};
+	mongoose.models[req.findTable].count({}, function (err, count) {
 
-			mongoose.models[req.findTable].count({}, function (err, count){
-
-				if(count>0){
-					mongoose.models[req.findTable].ensureIndexes({point:"2dsphere"});
-					//document exists });
-					if(mongoose.models[req.findTable]!= undefined)
-						var query={};
-					if(query!= undefined)
-					{
-						query.loc = {
-							$near : {
-								$geometry : {
-									type : "Point",
-									coordinates : [latitude, longitude]
-								},
-								//	$maxDistance : 1000
-							}
-						}
-					};
-					mongoose.models[req.findTable].find(query,function(err,data)
-					{
-						if (err) throw err;
-
-
-						else
-						{
-							var datas = data.map(function (record) {
-								return record.toObject();
-							});
-							datas.findTable =req.findTable;
-							callback(null, datas);
-						}
-					});
+		if (count > 0) {
+			mongoose.models[req.findTable].ensureIndexes({point: "2dsphere"});
+			//document exists });
+			if (mongoose.models[req.findTable] != undefined)
+				var query = {};
+			if (query != undefined) {
+				query.loc = {
+					$near: {
+						$geometry: {
+							type: "Point",
+							coordinates: [latitude, longitude]
+						},
+						//	$maxDistance : 1000
+					}
 				}
+			}
+			;
+			mongoose.models[req.findTable].find(query, function (err, data) {
+				if (err) throw err;
+
+
 				else {
-					var results=[];
-					results.findTable =req.findTable;
-					results.sizes = count;
-					callback(null, results);
+					var datas = data.map(function (record) {
+						return record.toObject();
+					});
+					datas.findTable = req.findTable;
+					callback(null, datas);
 				}
 			});
-
+		}
+		else {
+			var results = [];
+			results.findTable = req.findTable;
+			results.sizes = count;
+			callback(null, results);
+		}
+	});
 		}
 		catch (x)
 		{
