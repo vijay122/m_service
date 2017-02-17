@@ -14,6 +14,17 @@ function randomValueHex (len) {
 
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
+
+var OrderSchema = new Schema({
+	mon: String,
+	userInfo:{},
+	customerInfo:{},
+	paymentInfo:{},
+	productsInfo:{},
+	duedateInfo :{},
+	created_date: { type: Date, default: Date.now },
+});
+
 var ProductSchema = new Schema({
 	name: String,
 	title:String,
@@ -112,6 +123,8 @@ var AppScriptsSchema = new Schema({
 ProductSchema.index({ loc : '2dsphere' });
 
 var Event = mongoose.model('Event', EventSchema);
+
+var Order = mongoose.model('Order', OrderSchema);
 
 var Place = mongoose.model('Place', ProductSchema);
 
@@ -220,6 +233,59 @@ exports.profilePackage = function(req,res)
 {
 	validateLocations();
 }
+
+function getMON()
+{
+	return "MD123312";
+}
+function mapProductsToPackages(productlist)
+{
+  return productlist;
+}
+function mapUserInfo()
+{
+	var usr={};
+	usr.name="testuser1";
+    //get it from access token
+	return usr;
+}
+function mapCustomerInfo()
+{
+	var customer={};
+	customer.name="customer1";
+	return customer;
+}
+
+function mapPaymentStatus()
+{
+	var payment={};
+	payment.paymenttype="card";
+	return payment;
+}
+function mapDuedateInfo()
+{
+
+}
+createOrder=function(cartItems,res)
+{
+	var order = Order({
+		mon: getMON(),
+		userInfo: mapUserInfo(),
+		customerInfo: mapCustomerInfo(),
+		paymentInfo: mapPaymentStatus(),
+		productsInfo: mapProductsToPackages(cartItems),
+		duedateInfo: mapDuedateInfo(),
+		created_date: {type: Date, default: Date.now}
+	});
+	 var ord = order.toObject();
+	//var myresponse = JSON.stringify(ord);
+	//return res.send(200,ord);
+
+	res.status(200).send(ord);
+	//mapPaymentStatus();
+	//mapDeliveryInfo();
+}
+
 exports.validatePackage = function(req,res)
 {
 	var package ={};
@@ -236,8 +302,9 @@ exports.validatePackage = function(req,res)
 	totalstays = cartItems.getStays();
 	var start = tripInfo.fromdate;
 	var end = tripInfo.todate;
-
-	validateLocations();
+	//res.send();
+	 createOrder(cartItems,res);
+	//validateLocations(cartItems);
 }
 
 
