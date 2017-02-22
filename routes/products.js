@@ -5,7 +5,7 @@ var AutoComplete = require('mongoose-in-memory-autocomplete').AutoComplete;
 //var Place = require("../models/product");
 var crypto = require('crypto');
 var Async = require('async');
-
+var generateID = require("unique-id-generator");
 function randomValueHex (len) {
 	return crypto.randomBytes(Math.ceil(len/2))
 		.toString('hex') // convert to hexadecimal format
@@ -23,6 +23,10 @@ var OrderSchema = new Schema({
 	productsInfo:{},
 	duedateInfo :{},
 	created_date: { type: Date, default: Date.now },
+});
+
+var googleMapsClient = require('@google/maps').createClient({
+	key: 'AIzaSyAVebFb0CRGtfPyIz0VPv9nul-vxRMYt5U'
 });
 
 var ProductSchema = new Schema({
@@ -80,6 +84,8 @@ var EventSchema = new Schema({
 var PackageSchema = new Schema({
 	name: String,
 	duration:String,
+	noofnights:String,
+	noofdays:String,
 	title:String,
 	_id:String,
 	classification:String,
@@ -236,7 +242,8 @@ exports.profilePackage = function(req,res)
 
 function getMON()
 {
-	return "MD123312";
+	var id = generateID({prefix:"ORD-"});
+	return id;
 }
 function mapProductsToPackages(productlist)
 {
@@ -447,6 +454,8 @@ exports.addProduct = function (req, res) {
 			city :req.body.payload.city,
 			state:req.body.payload.state,
 			pincode:req.body.payload.pincode,
+			noofdays:req.body.payload.noofdays,
+			noofnights:req.body.payload.noofnights,
 			duration:req.body.payload.duration,
 			description:req.body.payload.description,
 			whattoeat:req.body.payload.whattoeat,

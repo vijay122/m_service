@@ -41,7 +41,8 @@
     "s3-image-uploader": "^1.0.4",
     "smsgateway": "^0.1.2",
     "socket-io": "0.0.0",
-    "socket.io": "^1.4.8"
+    "socket.io": "^1.4.8",
+    "unique-id-generator": "^1.0.1"
   },
   "engines": {
     "node": "<= 4.2.2"
