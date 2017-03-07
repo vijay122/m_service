@@ -796,7 +796,14 @@ exports.GetProducts = function (req, res) {
 			{
 				if(req.body.payload.sectionName!="refresh")
 				{
-					callbackFunctions.push(FindFunction(request));
+					if(req.body.payload.sectionName=="search")
+					{
+						callbackFunctions.push(FindFullVolumeFunction(request));
+					}
+					else
+					{
+						callbackFunctions.push(FindFunction(request));
+					}
 				}
 				if(req.body.payload.sectionName=="refresh")
 				{
@@ -1032,6 +1039,31 @@ script.events="Buy 1 ticket to Champions league and get 1 ticket absolutely free
 		}
 		//}
 	//}
+}
+
+var FindFullVolumeFunction =function (req, callback) {
+	return  function(callback) {
+		try {
+			var findRequest = getCreateRequest(req);
+
+			mongoose.models[req.findTable].find(findRequest,{},{sort:{'created_date':-1}}, function(err, data) {
+				if (err) throw err;
+				var datas = data.map(function (record) {
+					return record.toObject();
+				});
+				datas.findTable =req.findTable;
+				mongoose.models[req.findTable].count({}, function(err, c) {
+					datas.sizes = c;
+					callback(null, datas);
+				});
+			});
+		}
+		catch (e)
+		{
+			console.log("Exception in FindFunction:"+e);
+		}
+	};
+
 }
 
 var FindFunction =function (req, callback) {
