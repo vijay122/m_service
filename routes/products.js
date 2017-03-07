@@ -25,6 +25,11 @@ var OrderSchema = new Schema({
 	created_date: { type: Date, default: Date.now },
 });
 
+var dist = require('./digikstra');
+
+var distance = require('google-distance');
+distance.apiKey = 'AIzaSyAVebFb0CRGtfPyIz0VPv9nul-vxRMYt5U';
+
 var googleMapsClient = require('@google/maps').createClient({
 	key: 'AIzaSyAVebFb0CRGtfPyIz0VPv9nul-vxRMYt5U'
 });
@@ -140,6 +145,70 @@ var Package = mongoose.model('Package', PackageSchema);
 
 var AppScripts = mongoose.model('AppScripts',AppScriptsSchema);
 
+//geocode({'placeId': place.place_id}, function(results, status) {
+
+
+googleMapsClient.geocode({
+	address: '1600 Amphitheatre Parkway, Mountain View, CA'
+}, function(err, response) {
+	if (!err) {
+		console.log(response.json.results);
+	}
+});
+
+
+
+function * plotMarkers(markers) {
+	var nodes=[];
+	for (var i = 0; i < markers.length; i++) {
+		if (markers[i].loc != undefined) {
+			var myLatLng = {lat: markers[i].loc.coordinates[0], lng: markers[i].loc.coordinates[1]};
+			nodes.push(myLatLng);
+		}
+	}
+	return nodes;
+}
+
+
+function getDurations (placearray,res) {
+	//var service = new google.maps.DistanceMatrixService();
+	var nodes=[];
+	for (var i = 0; i < placearray.length; i++) {
+		if (placearray[i].loc != undefined) {
+			var locationid =placearray[i].loc.coordinates[0]+","+placearray[i].loc.coordinates[1];
+			var myLatLng = {lat: placearray[i].loc.coordinates[0], lng: placearray[i].loc.coordinates[1]};
+			nodes.push(locationid);
+		}
+	}
+
+	distance.get(
+		{
+			origins: nodes,
+			destinations: nodes
+		},
+		function(err, data) {
+			if (err) return console.log(err);
+			console.log(data);
+			var $adj_matrix = [];
+			var itr=0;
+			/* Reset the matrix to all '0's */
+			for(var i =0;i<nodes.length; i++){
+				$adj_matrix[i] = [];
+				for(var j =0;j<nodes.length; j++)
+				{
+					//$adj_matrix[i][j] = [];
+					$adj_matrix[i][j]=data[itr].distanceValue;
+					itr++;
+				}
+			}
+			var shortestPathInfo = dist.shortestPath($adj_matrix, 5, 1);
+
+// Get the shortest path from vertex 1 to vertex 6.
+			var path1to6 = dist.constructPath(shortestPathInfo, 4);
+		});
+	//return nodes;
+	//var nodes = yield plotMarkers(placearray);
+}
 
 var ShoppingCartSchema = new Schema({}, { strict: false });
 var ShoppingCart = mongoose.model('ShoppingCart', ShoppingCartSchema);
@@ -222,6 +291,17 @@ Array.prototype.getTripStates = function()
 	return states;
 }
 
+Array.prototype.getPackages = function()
+{
+	var packages =[];
+	for(var i=0; i< this.length; i++)
+	{
+		if(this[i].type && (this[i].type) == "package")
+			packages.push(this[i]);
+	}
+	return packages;
+}
+
 function isCrossState(productlist)
 {
 	return false;
@@ -299,21 +379,34 @@ exports.validatePackage = function(req,res)
 	var event={};
 	var hotel={};
     var tripInfo = req.body.payload.tripInfo;
-	var cartItems = req.body.payload.products;
+	var products = req.body.payload.products;
 	var totaldistances;
 	var totalstates;
 	var totalnumberofnights;
 	var totalstays;
+	var totalpackages;
+	var productlists ;
 
-	totalstates = cartItems.getTripStates();
-	totalstays = cartItems.getStays();
+	totalstates = products.getTripStates();
+	totalstays = products.getStays();
+	totalpackages = products.getPackages();
 	var start = tripInfo.fromdate;
 	var end = tripInfo.todate;
 	//res.send();
-	 createOrder(cartItems,res);
+	if(totalpackages.length>0)
+	{
+		productlists = totalpackages[0].products;
+	}
+	else
+	{
+		productlists = products;
+	}
+	//var gen = getDurations(productlists);
+	 getDurations(productlists,res);
+	//gen.next();
+	// createOrder(productlists,res);
 	//validateLocations(cartItems);
 }
-
 
 function markCalender(instance,item,calender) {
 
@@ -698,6 +791,7 @@ exports.GetProducts = function (req, res) {
 			{
 				request._id =req.body.payload.searchvalue;
 			}
+			request = mapCreateRequest(req.body.payload,request);
 			if(req.body.payload.lat==undefined && req.body.payload.sectionName!= undefined)
 			{
 				if(req.body.payload.sectionName!="refresh")
@@ -784,12 +878,33 @@ console.log("exception in get products:"+ e);
 	}
 }
 
+var mapCreateRequest = function(req, request)
+{
+
+
+	var reqFormat = {};
+	if(request!= undefined)
+	{
+		reqFormat = request;
+	}
+	if(req._id != undefined)
+		reqFormat._id = req._id;
+	if(req['searchby'] != undefined)
+		reqFormat[req['searchby']] = req['searchvalue'];
+	return reqFormat;
+}
+
 var getCreateRequest= function(req)
 {
+
 
 	var reqFormat = {};
 	if(req._id != undefined)
 	reqFormat._id = req._id;
+	if(req.city != undefined)
+		reqFormat.city = req.city;
+	if(req.state != undefined)
+		reqFormat.state = req.state;
 	return reqFormat;
 }
 
