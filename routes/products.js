@@ -894,6 +894,24 @@ var mapCreateRequest = function(req, request)
 	{
 		reqFormat = request;
 	}
+	if( req.searchOptions && req.searchOptions.searchOptions && Array.isArray(req.searchOptions.searchOptions))
+	{
+		for(var s=0; s<req.searchOptions.searchOptions.length;s++)
+		{
+			reqFormat[req.searchOptions.searchOptions[s].split(',')[0]] = req.searchOptions.searchOptions[s].split(',')[1];
+			//reqFormat[[req.searchOptions.search[0]]]=reqFormat[[req.searchOptions.search[1]]];
+		}
+	}
+	else if( req.searchOptions && req.searchOptions.searchOptions && !Array.isArray(req.searchOptions.searchOptions))
+	{
+			reqFormat[req.searchOptions.searchOptions.split(',')[0]] = req.searchOptions.searchOptions.split(',')[1];
+			//reqFormat[[req.searchOptions.search[0]]]=reqFormat[[req.searchOptions.search[1]]];
+	}
+	if(req.searchOptions && req.searchOptions.search)
+	for(var s=0; s<req.searchOptions.search.length;s++)
+	{
+		reqFormat[[req.searchOptions.search[0]]]=reqFormat[[req.searchOptions.search[1]]];
+	}
 	if(req._id != undefined)
 		reqFormat._id = req._id;
 	if(req['searchby'] != undefined)
@@ -903,7 +921,13 @@ var mapCreateRequest = function(req, request)
 
 var getCreateRequest= function(req)
 {
+	if(req.searchOptions)
+	{
+		for(var i=0;i<req.searchOptions.length; i++)
+		{
 
+		}
+	}
 
 	var reqFormat = {};
 	if(req._id != undefined)
