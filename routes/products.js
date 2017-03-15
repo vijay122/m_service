@@ -464,7 +464,7 @@ exports.addProduct = function (req, res) {
 		type:req.body.payload.type,
 		loc: {
 			type: "Point",
-			coordinates: [req.body.payload.latitude, req.body.payload.longitude]
+			coordinates: [req.body.payload.longitude, req.body.payload.latitude]
 		},
 		description:req.body.payload.description,
 		whattoeat:req.body.payload.whattoeat,
@@ -490,7 +490,7 @@ exports.addProduct = function (req, res) {
 			type:req.body.payload.type,
 			loc: {
 				type: "Point",
-				coordinates: [req.body.payload.latitude, req.body.payload.longitude]
+				coordinates: [req.body.payload.longitude, req.body.payload.latitude]
 			},
 			city :req.body.payload.city,
 			state:req.body.payload.state,
@@ -516,7 +516,7 @@ exports.addProduct = function (req, res) {
 			type:req.body.payload.type,
 			loc: {
 				type: "Point",
-				coordinates: [req.body.payload.latitude, req.body.payload.longitude]
+				coordinates: [req.body.payload.longitude, req.body.payload.latitude]
 			},
 			city :req.body.payload.city,
 			state:req.body.payload.state,
@@ -541,7 +541,7 @@ exports.addProduct = function (req, res) {
 			type:req.body.payload.type,
 			loc: {
 				type: "Point",
-				coordinates: [req.body.payload.latitude, req.body.payload.longitude]
+				coordinates: [req.body.payload.longitude, req.body.payload.latitude]
 			},
 			district:req.body.payload.district,
 			city :req.body.payload.city,
@@ -949,12 +949,12 @@ var FindByIDAndThenNearby =function (req, callback) {
 					return record.toObject();
 				});
 				var location = datas[0].loc;
-				var latitude = location.coordinates[0];
-				var longitude = location.coordinates[1];
+				var longitude = location.coordinates[0];
+				var latitude = location.coordinates[1];
 
 				var point = {
 					type: "Point",
-					coordinates: [latitude, longitude]
+					coordinates: [longitude, latitude]
 				};
 				var geoOptions = {
 					spherical: true,
@@ -970,7 +970,7 @@ var FindByIDAndThenNearby =function (req, callback) {
 						$near: {
 							$geometry: {
 								type: "Point",
-								coordinates: [latitude, longitude]
+								coordinates: [longitude, latitude]
 							},
 							$minDistance: 0,
 							$maxDistance: 5000
@@ -1134,7 +1134,7 @@ var geoFindFunction =function (req, callback) {
 
 			var point = {
 				type: "Point",
-				coordinates: [latitude,longitude]
+				coordinates: [longitude,latitude]
 			};
 			var geoOptions = {
 				spherical: true,
@@ -1153,7 +1153,7 @@ var geoFindFunction =function (req, callback) {
 					$near: {
 						$geometry: {
 							type: "Point",
-							coordinates: [latitude, longitude]
+							coordinates: [longitude, latitude]
 						},
 						//	$maxDistance : 1000
 					}
