@@ -936,6 +936,8 @@ var getCreateRequest= function(req)
 		reqFormat.city = req.city;
 	if(req.state != undefined)
 		reqFormat.state = req.state;
+	if(req.category != undefined)
+		reqFormat.category = req.category;
 	return reqFormat;
 }
 
@@ -1069,14 +1071,14 @@ var FindFullVolumeFunction =function (req, callback) {
 	return  function(callback) {
 		try {
 			var findRequest = getCreateRequest(req);
-
-			mongoose.models[req.findTable].find(findRequest,{},{sort:{'created_date':-1}}, function(err, data) {
+var tableName = (req.findTable!= undefined && req.findTable=="packages")?"Package":req.findTable;
+			mongoose.models[tableName].find(findRequest,{},{sort:{'created_date':-1}}, function(err, data) {
 				if (err) throw err;
 				var datas = data.map(function (record) {
 					return record.toObject();
 				});
-				datas.findTable =req.findTable;
-				mongoose.models[req.findTable].count({}, function(err, c) {
+				datas.findTable =tableName;
+				mongoose.models[tableName].count({}, function(err, c) {
 					datas.sizes = c;
 					callback(null, datas);
 				});
