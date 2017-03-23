@@ -121,6 +121,7 @@ var PackageSchema = new Schema({
 	start_date: { type: Date, default: Date.now },
 	end_date: { type: Date, default: Date.now },
 	created_by:String,
+	aboutoperator:String,
 	category:[String],
 	season: String,
 });
@@ -563,6 +564,7 @@ exports.addProduct = function (req, res) {
 				saleEndDate: Date.now(),
 			}],
 			created_by:req.body.payload.operator,
+			aboutoperator:req.body.payload.aboutoperator,
 			category:[String],
 			season: String,
 		});
