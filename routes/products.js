@@ -565,7 +565,7 @@ exports.addProduct = function (req, res) {
 			}],
 			created_by:req.body.payload.operator,
 			aboutoperator:req.body.payload.aboutoperator,
-			category:[String],
+			category:req.body.payload.category,
 			season: String,
 		});
 	}
