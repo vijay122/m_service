@@ -21,6 +21,7 @@
   "author": "Vijay-A-",
   "license": "ISC",
   "dependencies": {
+    "@google/maps": "^0.3.1",
     "async": "^1.5.2",
     "babel": "4.7.16",
     "babel-core": "^6.3.15",
@@ -38,6 +39,7 @@
     "googlemaps": "^1.11.1",
     "literalify": "^0.4.0",
     "mongodb": "^2.1.16",
+    "mongojs": "^2.4.0",
     "multer": "^1.0.1",
     "s3-image-uploader": "^1.0.4",
     "smsgateway": "^0.1.2",
