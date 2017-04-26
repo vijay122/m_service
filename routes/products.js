@@ -291,7 +291,17 @@ Array.prototype.getTripStates = function()
 	}
 	return states;
 }
-
+Array.prototype.getTripCountries = function()
+{
+	var states =[];
+	for(var i=0; i< this.length; i++)
+	{
+		if(this[i].country && states.indexOf(this[i].country) == -1)
+		//if( states) // this[i].state should not exist in the states array
+			states.push(this[i].country);
+	}
+	return states;
+}
 Array.prototype.getPackages = function()
 {
 	var packages =[];
@@ -381,19 +391,29 @@ exports.validatePackage = function(req,res)
 	var hotel={};
     var tripInfo = req.body.payload.tripInfo;
 	var products = req.body.payload.products;
+	var userInfo = req.body.payload.userInfo;
 	var totaldistances;
 	var totalstates;
+	var totalcountries;
 	var totalnumberofnights;
 	var totalstays;
 	var totalpackages;
 	var productlists ;
 
 	totalstates = products.getTripStates();
+	totalcountries = products.getTripCountries();
 	totalstays = products.getStays();
 	totalpackages = products.getPackages();
 	var start = tripInfo.fromdate;
 	var end = tripInfo.todate;
-	//res.send();
+	//res.send();]
+
+	var orderReviewResponse={};
+	var orderSummaryResponse={};
+	var orderBillingAddressResponse={};
+	var orderTravelDetailsResponse={};
+	var orderPaymentInfoResponse={};
+	var orderInfo={};
 	if(totalpackages.length>0)
 	{
 		productlists = totalpackages[0].products;
@@ -402,11 +422,61 @@ exports.validatePackage = function(req,res)
 	{
 		productlists = products;
 	}
+	orderReviewResponse =FormatOrderReviewResponse(totalcountries,totalstates,totaldistances,totalnumberofnights);
+	orderBillingAddressResponse =FormatOrderBillingAddressResponse(userInfo);
+	orderTravelDetailsResponse = FormatTravelDetailsResponse(userInfo);
+	orderPaymentInfoResponse = FormatPaymentInfoResponse(userInfo);
 	//var gen = getDurations(productlists);
-	 getDurations(productlists,res);
+	// getDurations(productlists,res);
 	//gen.next();
 	// createOrder(productlists,res);
 	//validateLocations(cartItems);
+	var responseObj ={};
+	responseObj.orderReviewResponse = orderReviewResponse;
+	responseObj.orderBillingAddressResponse = orderBillingAddressResponse;
+	responseObj.orderTravelDetailsResponse = orderTravelDetailsResponse;
+	responseObj.orderPaymentInfoResponse = orderPaymentInfoResponse;
+	res.send(responseObj);
+}
+
+function  FormatTravelDetailsResponse(tripInfo) {
+	var response=[];
+	if(tripInfo!= undefined)
+	{
+
+	}
+	return response;
+}
+
+function  FormatOrderBillingAddressResponse(tripInfo) {
+	var response=[];
+	if(tripInfo!= undefined)
+	{
+
+	}
+	return response;
+}
+
+function  FormatPaymentInfoResponse(tripInfo) {
+	var response=[];
+	if(tripInfo!= undefined)
+	{
+
+	}
+	return response;
+}
+
+function  FormatOrderReviewResponse(totalcountries,totalstates,totaldistances,totalnumberofnights) {
+	var response=[];
+	if(totalcountries.length>1)
+	{
+		response.push("Travelling more than one country is not supported right now")
+	}
+	if(totalstates.length>1)
+	{
+		response.push("Travelling more than one state is not supported right now")
+	}
+	return response;
 }
 
 function markCalender(instance,item,calender) {
@@ -731,6 +801,8 @@ exports.GetHomePageItems = function (req, res) {
 exports.GetProducts = function (req, res) {
 	try
 	{
+		var sess = req.session;
+
 		var seoTable =[];
 		var noOfRecords=0;
 		if(req.body.payload.noOfRecords!= undefined)

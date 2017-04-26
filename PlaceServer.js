@@ -64,10 +64,9 @@ app.use(function(req, res, next) {
 });
 //Very important change for enabling cross domain origin ----------------End
 app.use(session({
-    secret: 'secret',
-    resave: false,
-    saveUninitialized: false,
-    cookie: { maxAge: 6000 }
+	secret: 'test session',
+	resave: false,
+	saveUninitialized: true,
 }));
 app.route('/api/photo')
 .post(function (req, res, next) {
@@ -129,18 +128,8 @@ app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, 'images')));
 app.post('/test',product.GetProducts);
 app.get('/createAppScripts',product.FindCountFunction);
-//app.get('/categories',place.GetCategories);
-//app.get('/seo',place.PopulateOffers);
-//app.get('/categories/:type/:id/:lat/:long',place.GetPlacesByCategoryId);
-//app.get('/places', place.findAll);
-//app.get('/loadplace/:id', place.GetPlaceDetailsByPlaceID);
-//app.post('/places', place.addPlace);
-//app.post('/places/LoadScrollers', place.LoadScrollImages);
 app.post('/Save', product.addProduct);
-//app.get('/getTemperature/:location', place.getTemperature);
-//app.get('/getRecommendationsforseason', place.GetBestOffers);
 app.post('/getProducts', product.GetProducts);
-//app.post('/geoCode', place.GeoCode);
 app.post('/login', user.loadUserInfo);
 app.post('/disableUser', user.disableUser);
 app.post('/register', user.addUser);
