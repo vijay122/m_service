@@ -25,6 +25,17 @@ var OrderSchema = new Schema({
 	created_date: { type: Date, default: Date.now },
 });
 
+var MessageSchema = new Schema({
+	number: String,
+	session:String,
+	interests:[],
+	currentItemName:String,
+	currentItemId:String,
+	created_date: { type: Date, default: Date.now },
+});
+
+var Message = mongoose.model('Message', MessageSchema);
+
 var dist = require('./digikstra');
 
 var distance = require('google-distance');
@@ -524,6 +535,25 @@ exports.getOrders = function(req,res) {
 		}
 });
 }
+
+exports.GetCallback = function(req,res) {
+var message_obj = req.body.payload;
+	var message = new Message(message_obj);
+	message.save();
+	res.send({});
+	//mongoose.models['Message'].find( function (err, data) {
+	//	if (err) throw err;
+
+
+	//	else {
+	//		var datas = data.map(function (record) {
+	//			return record.toObject();
+	//		});
+	//		return res.send(200, datas);
+	//	}
+	//});
+}
+
 exports.addProduct = function (req, res) {
 	var package ={};
 	var event={};
@@ -629,6 +659,7 @@ exports.addProduct = function (req, res) {
 			assets:req.body.payload.assets,
 			price: req.body.payload.price,
 			products:req.body.payload.products,
+			classification:req.body.payload.classification,
 			sale: [{
 				salePrice: 0,
 				saleEndDate: Date.now(),
