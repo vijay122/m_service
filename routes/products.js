@@ -1,8 +1,5 @@
 var mongoose = require('mongoose');
 var AutoComplete = require('mongoose-in-memory-autocomplete').AutoComplete;
-
-//import * from "mongoose-in-memory-autocomplete";
-//var Place = require("../models/product");
 var crypto = require('crypto');
 var Async = require('async');
 var generateID = require("unique-id-generator");
@@ -11,30 +8,18 @@ function randomValueHex (len) {
 		.toString('hex') // convert to hexadecimal format
 		.slice(0,len);   // return required number of characters
 }
+var Order = require('../models/order');
+var Place = require('../models/place');
+var Hotel = require('../models/hotel');
+var Event = require('../models/event');
+var Package = require('../models/package');
+var Message = require('../models/message');
+var AppScripts = require('../models/appscripts');
+var ShoppingCart = require('../models/shoppingcart');
+var ProductSchema = require('../schema/mongoose.schema');
 
-var mongoose = require('mongoose');
-var Schema = mongoose.Schema;
 
-var OrderSchema = new Schema({
-	mon: String,
-	userInfo:{},
-	customerInfo:{},
-	paymentInfo:{},
-	productsInfo:{},
-	duedateInfo :{},
-	created_date: { type: Date, default: Date.now },
-});
 
-var MessageSchema = new Schema({
-	number: String,
-	session:String,
-	interests:[],
-	currentItemName:String,
-	currentItemId:String,
-	created_date: { type: Date, default: Date.now },
-});
-
-var Message = mongoose.model('Message', MessageSchema);
 
 var dist = require('./digikstra');
 
@@ -45,117 +30,10 @@ var googleMapsClient = require('@google/maps').createClient({
 	key: 'AIzaSyAVebFb0CRGtfPyIz0VPv9nul-vxRMYt5U'
 });
 
-var ProductSchema = new Schema({
-	name: String,
-	title:String,
-	_id:String,
-	type:String,
-	loc: {
-		type: { type: String },
-		coordinates: [ Number ],
-	},
-	city :String,
-	state:String,
-	pincode:String,
-	country:String,
-	displaypicture:String,
-	description:String,
-	whattoeat:String,
-	whattodo:String,
-	howtoreach:String,
-	landmark: String,
-	image: [],
-	created_date: { type: Date, default: Date.now },
-	created_by:String,
-	season: String,
-});
-
-var EventSchema = new Schema({
-	name: String,
-	title:String,
-	_id:String,
-	type:String,
-	loc: {
-		type: { type: String },
-		coordinates: [ Number ],
-	},
-	city :String,
-	state:String,
-	pincode:String,
-	country:String,
-	displaypicture:String,
-	description:String,
-	whattoeat:String,
-	whattodo:String,
-	howtoreach:String,
-	landmark: String,
-	image: [],
-	created_date: { type: Date, default: Date.now },
-	start_date: { type: Date, default: Date.now },
-	end_date: { type: Date, default: Date.now },
-	created_by:String,
-	season: String,
-});
-
-var PackageSchema = new Schema({
-	name: String,
-	duration:String,
-	noofnights:String,
-	noofdays:String,
-	title:String,
-	_id:String,
-	classification:String,
-	type:String,
-	loc: {
-		type: { type: String },
-		coordinates: [ Number ],
-	},
-	city :String,
-	district:String,
-	state:String,
-	pincode:String,
-	country:String,
-	products:[],
-	assets:
-	{
-		display:String,
-		image:[]
-	},
-	description:String,
-	landmark: String,
-	price: Number,
-	sale: [{
-		salePrice: Number,
-		saleEndDate: { type: Date, default: Date.now },
-	}],
-	last_updated_date: { type: Date, default: Date.now },
-	start_date: { type: Date, default: Date.now },
-	end_date: { type: Date, default: Date.now },
-	created_by:String,
-	aboutoperator:String,
-	category:[String],
-	season: String,
-});
-
-var AppScriptsSchema = new Schema({
-	CategoryCount : [],
-	SectionScripts:{}
-});
 
 //db.packages.aggregate( [ { $unwind: "$category" },  { $sortByCount: "$category" } ] )
 ProductSchema.index({ loc : '2dsphere' });
 
-var Event = mongoose.model('Event', EventSchema);
-
-var Order = mongoose.model('Order', OrderSchema);
-
-var Place = mongoose.model('Place', ProductSchema);
-
-var Hotel = mongoose.model('Hotel', ProductSchema);
-
-var Package = mongoose.model('Package', PackageSchema);
-
-var AppScripts = mongoose.model('AppScripts',AppScriptsSchema);
 
 //geocode({'placeId': place.place_id}, function(results, status) {
 
@@ -221,10 +99,6 @@ function getDurations (placearray,res) {
 	//return nodes;
 	//var nodes = yield plotMarkers(placearray);
 }
-
-var ShoppingCartSchema = new Schema({}, { strict: false });
-var ShoppingCart = mongoose.model('ShoppingCart', ShoppingCartSchema);
-
 var connectionString = 'mongodb://root:Vjy4livelytrips@148.72.246.39:27017/placesDB?authSource=admin';
 
 mongoose.createConnection(connectionString);
@@ -273,56 +147,6 @@ var	hotels=[];
 	}
 }
 
-Array.prototype.getStays=function()
-{
-	var stays=[];
-	for(var i=0; i<this.length;i++)
-	{
-		if(this[i].type=="hotel")
-		{
-		var checkin =	this[i].checkin;
-		var checkout = this[i].checkout;
-		var hotel = this[i];
-		hotel.checkin = checkin;
-		hotel.checkout = checkout;
-			stays.push(hotel);
-		}
-	}
-	return stays;
-}
-
-Array.prototype.getTripStates = function()
-{
-	var states =[];
-	for(var i=0; i< this.length; i++)
-	{
-		if(this[i].state && states.indexOf(this[i].state) == -1)
-		//if( states) // this[i].state should not exist in the states array
-				states.push(this[i].state);
-	}
-	return states;
-}
-Array.prototype.getTripCountries = function()
-{
-	var states =[];
-	for(var i=0; i< this.length; i++)
-	{
-		if(this[i].country && states.indexOf(this[i].country) == -1)
-		//if( states) // this[i].state should not exist in the states array
-			states.push(this[i].country);
-	}
-	return states;
-}
-Array.prototype.getPackages = function()
-{
-	var packages =[];
-	for(var i=0; i< this.length; i++)
-	{
-		if(this[i].type && (this[i].type) == "package")
-			packages.push(this[i]);
-	}
-	return packages;
-}
 
 function isCrossState(productlist)
 {
@@ -375,7 +199,7 @@ function mapDuedateInfo()
 {
 
 }
-createOrder=function(cartItems,res)
+var createOrder=function(cartItems,res)
 {
 	var order = Order({
 		mon: getMON(),
@@ -387,12 +211,7 @@ createOrder=function(cartItems,res)
 		created_date: {type: Date, default: Date.now}
 	});
 	 var ord = order.toObject();
-	//var myresponse = JSON.stringify(ord);
-	//return res.send(200,ord);
-
 	res.status(200).send(ord);
-	//mapPaymentStatus();
-	//mapDeliveryInfo();
 }
 
 exports.validatePackage = function(req,res)
@@ -517,7 +336,6 @@ exports.placeOrder = function (req, res) {
 	var package ={};
 	var event={};
 	var hotel={};
-
 	var cartItems = req.body.payload.products;
 	var cart = new ShoppingCart(cartItems);
 	cart.save(); // cartItems is now saved to the db!!
@@ -525,8 +343,6 @@ exports.placeOrder = function (req, res) {
 exports.getOrders = function(req,res) {
 	mongoose.models['ShoppingCart'].find( function (err, data) {
 		if (err) throw err;
-
-
 		else {
 			var datas = data.map(function (record) {
 				return record.toObject();
@@ -541,17 +357,6 @@ var message_obj = req.body.payload;
 	var message = new Message(message_obj);
 	message.save();
 	res.send({});
-	//mongoose.models['Message'].find( function (err, data) {
-	//	if (err) throw err;
-
-
-	//	else {
-	//		var datas = data.map(function (record) {
-	//			return record.toObject();
-	//		});
-	//		return res.send(200, datas);
-	//	}
-	//});
 }
 
 exports.addProduct = function (req, res) {
@@ -676,28 +481,14 @@ exports.addProduct = function (req, res) {
 	{
 		console.log('Adding Place: ' + JSON.stringify(product));
 		var upsertData = product.toObject();
-		//Place.findOne({"loc.coordinates":upsertData.loc.coordinates}, upsertData, {upsert: false}, function(err, result){
-
-		//	Place.findOneAndUpdate({"loc":upsertData.loc}, upsertData, {upsert: false}, function(err, result){
-
-		//	Place.findOneAndUpdate({$and:[{"_id":{$ne:upsertData._id}},{"loc":upsertData.loc}]}, upsertData, {upsert: false}, function(err, result){
-			Place.findOneAndUpdate({"_id": upsertData._id}, upsertData, {upsert: true}, function(err, result){
+		Place.findOneAndUpdate({"_id": upsertData._id}, upsertData, {upsert: true}, function(err, result){
 			if (err) throw err;
 			if(result)
 			{
 
 			}
-
 			console.log('Place created!');
 		});
-		/*
-		Place.findOneAndUpdate({$or:[{"_id":upsertData._id},{$and:[{"_id":{$ne:upsertData._id}},{"loc":upsertData.loc,"state":upsertData.state,"city":upsertData.city}]}]}, upsertData, {upsert: true}, function(err, result){
-			//Place.findOneAndUpdate({"_id": upsertData._id}, upsertData, {upsert: true}, function(err, result){
-			if (err) throw err;
-
-			console.log('Place created!');
-		});
-		*/
 	}
 	if(req.body.payload.type=="event")
 	{
@@ -729,6 +520,23 @@ exports.addProduct = function (req, res) {
 		});
 	}
 }
+
+exports.GetRatingEntries = function(req,res)
+{
+	if(req.body.payload.ratingEntry=="Hotel")
+	{
+
+	}
+	if(req.body.payload.ratingEntry=="Place")
+	{
+		
+	}
+	if(req.body.payload.ratingEntry=="Package")
+	{
+		
+	}
+}
+
 exports.GetHomePageItems = function (req, res) {
 	try
 	{
@@ -1139,7 +947,7 @@ exports.FindCountFunction = function (req,callback) {
 		try {
 			var findRequest = getCreateRequest(req);
 var script ={};
-script.packages="Upto 50% offer in north india tours.";
+script.packages="Upto 50% offer in south india tours.";
 script.hotels="Book a premium hotel now before 15th this month and get a chance to fly france";
 script.events="Buy 1 ticket to Champions league and get 1 ticket absolutely free.";
 			Package.aggregate([

@@ -135,6 +135,7 @@ app.post('/login', user.loadUserInfo);
 app.post('/disableUser', user.disableUser);
 app.post('/register', user.addUser);
 app.post('/updateuser', user.updateUser);
+app.post('/getRatingEntries', product.GetRatingEntries);
 //app.post('/getTemperature/:location', place.getTemperature);
 //app.post('/viewmore', place.getNearbyPlaces);
 app.get('/autocomplete/:searchon/:search',product.autocomplete);
