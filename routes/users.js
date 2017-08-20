@@ -1,6 +1,8 @@
 var mongoose = require('mongoose');
 var User = require('../models/user');
 var connectionString = 'mongodb://root:Vjy4livelytrips@148.72.246.39:27017/placesDB?authSource=admin';
+var utils = require('./utils');
+//var bcrypt = require('bcrypt');
 
 mongoose.connect('mongodb://root:Vjy4livelytrips@148.72.246.39:27017/placesDB?authSource=admin');
 
@@ -39,6 +41,8 @@ exports.loadUserInfo = function (req, res) {
 
 			// object of the user
 			var s = user.toObject();
+			let token = utils.generateToken(s);
+			s.token = token;
 			return res.send(200, JSON.stringify(s));
 		});
 	}
@@ -65,6 +69,7 @@ exports.addUser = function (req, res) {
 	newUser.role = req.body.payload.role!= undefined?req.body.payload.role:"user";
 	newUser.company = req.body.payload.company;
 	console.log('Adding user: ' + JSON.stringify(newUser));
+	utils.SendMessage(newUser._id);
 	newUser.save(function(err) {
 		if (err) throw err;
 		if(req.body.payload.supervisor_id!= "" && req.body.payload.supervisor_id && req.body.payload.supervisor_id != req.body.payload.phone_number)

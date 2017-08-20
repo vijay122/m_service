@@ -17,6 +17,10 @@ var Message = require('../models/message');
 var AppScripts = require('../models/appscripts');
 var ShoppingCart = require('../models/shoppingcart');
 var ProductSchema = require('../schema/mongoose.schema');
+var Caravan = require('../models/caravan');
+var MotorCycle = require('../models/motorcycle');
+var Taxi = require('../models/taxi');
+var Addon = require('../models/addon');
 
 
 
@@ -99,9 +103,20 @@ function getDurations (placearray,res) {
 	//return nodes;
 	//var nodes = yield plotMarkers(placearray);
 }
-var connectionString = 'mongodb://root:Vjy4livelytrips@148.72.246.39:27017/placesDB?authSource=admin';
+var connectionString = 'mongodb://root:Vjy4livelytrips@148.72.246.39:27017/groundsDB?authSource=admin';
 
-mongoose.createConnection(connectionString);
+process.on('SIGINT', function() {
+	mongoose.connection.close(function () {
+		console.log('Mongoose default connection disconnected through app termination');
+		process.exit(0);
+	});
+});
+mongoose.connections.length = 0;
+mongoose.disconnect().then(function (x) {
+	console.log("connection closed");
+	mongoose.createConnection(connectionString);
+});
+
 
 exports.updateUser = function (req, res) {
 	try
@@ -684,6 +699,7 @@ exports.GetProducts = function (req, res) {
 			datatable.push('Place');
 			datatable.push('Package');
 			datatable.push('Event');
+			datatable.push('AdditionalService');
 		}
 		if(req.body.payload.sectionName=="admin")
 		{
@@ -1228,6 +1244,116 @@ buildResultSet = function(docs) {
 	}
 	return result;
 }
+exports.GetAdditionalServices = function(req,res)
+{
+	//var schemaName = req.body.payload.schemaName;
+	var images = [
+		{
+			url: "http://tripconnoisseurs.com/wp-content/uploads/2016/08/Honeymoon.jpg",
+			text:"cabs",
+			clickHandler: (url, obj) => {
+				console.log("inside category click "+obj)
+			}
+		},
+		{
+			url: "http://www.easternwatersports.com/wp-content/uploads/2016/04/grouptrip-300x300.jpg?x94867",
+			text:"caravans",
+			clickHandler: (url, obj) => {
+				console.log("inside category click "+obj)
+			}
+		},
+		{
+			text:"meals",
+			url: "https://static2.tripoto.com/media/filter/t/img/101328/TripDocument/1474279330_1474279325380.jpg",
+			clickHandler: (url, obj) => {
+				console.log("inside category click "+obj)
+			}
+		},
+		{
+			text:"pets",
+			url: "http://travelsourceindia.in/wp-content/uploads/2016/06/family-ties-300x300.jpg",
+			clickHandler: (url, obj) => {
+				console.log("inside category click "+obj)
+			}
+		}
+	];
+	return res.send(200, images);
+}
+
+
+exports.GetSchema = function(req,res)
+{
+	var schemaName = req.body.payload.type;
+	var arr = Object.keys(mongoose.models[schemaName].schema.paths).map(function (key) {
+		return [key,mongoose.models[schemaName].schema.paths[key].instance];
+	});
+arr =	arr.filterItems(schemaName);
+	//return arr;
+	res.send(200, JSON.stringify(arr));
+}
+
+exports.SaveAddon = function (req,res) {
+
+	var addonItem = req.body.payload;
+	addonItem.formElements = null;
+	var addon = new Addon({
+		category: req.body.payload.category,
+		loc: {
+			type: "Point",
+			coordinates: [req.body.payload.longitude, req.body.payload.latitude]
+		},
+	city: req.body.payload.city,
+		district: req.body.payload.district,
+		state: req.body.payload.state,
+		data: req.body.payload
+	});
+	addon.save(function(err, user) {
+		if(err) { return next(err); }
+	//	res.status(201).json({
+	//		user: user,
+	//	})
+	});
+	/*
+	addon.save(function (x) {
+
+	}).then(function(res,err)
+	{
+		debugger;
+	});
+	*/
+}
+
+exports.filterItems = function(array,schema)
+{
+
+}
+
+Array.prototype.filterItems=function(schema)
+{
+	var len = this.length >>> 0;
+	var returnArray;
+	//if (typeof schema != "function")
+	//	throw new TypeError();
+	var toRemove=[];
+	switch(schema)
+	{
+		case 'Package':
+			toRemove =["_id","start_date","end_date","__v","loc.coordinates","loc.type"];
+			break;
+		case 'Place':
+			toRemove=["_id","created_date","__v","loc.coordinates","loc.type"];
+			break;
+		case 'AdditionalItem':
+			toRemove=["_id","__v","loc.coordinates","loc.type"];
+			break;
+		case 'Caravan':
+		case 'Taxi':
+		case 'MotorCycle':
+			toRemove=["_id","created_date","__v","loc.coordinates","loc.type"];
+	}
+	returnArray = this.filter(function(x) { return toRemove.indexOf(x[0]) < 0 })
+	return returnArray;
+}
 
 exports.FetchUpdatedAppDataCountAndScripts = function (req, res) {
 	try
@@ -1345,5 +1471,54 @@ exports.FetchUpdatedAppDataCountAndScripts = function (req, res) {
 	{
 		console.log("exception in get products:"+ e);
 	}
+}
+
+Array.prototype.getStays=function()
+{
+	var stays=[];
+	for(var i=0; i<this.length;i++)
+	{
+		if(this[i].type=="hotel")
+		{
+			var checkin =	this[i].checkin;
+			var checkout = this[i].checkout;
+			var hotel = this[i];
+			hotel.checkin = checkin;
+			hotel.checkout = checkout;
+			stays.push(hotel);
+		}
+	}
+	return stays;
+}
+
+Array.prototype.getTripStates = function()
+{
+	var states =[];
+	for(var i=0; i< this.length; i++)
+	{
+		if(this[i].state && states.indexOf(this[i].state) == -1)
+			states.push(this[i].state);
+	}
+	return states;
+}
+Array.prototype.getTripCountries = function()
+{
+	var states =[];
+	for(var i=0; i< this.length; i++)
+	{
+		if(this[i].country && states.indexOf(this[i].country) == -1)
+			states.push(this[i].country);
+	}
+	return states;
+}
+Array.prototype.getPackages = function()
+{
+	var packages =[];
+	for(var i=0; i< this.length; i++)
+	{
+		if(this[i].type && (this[i].type) == "package")
+			packages.push(this[i]);
+	}
+	return packages;
 }
 

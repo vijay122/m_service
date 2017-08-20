@@ -10,7 +10,7 @@ var busboy = require('connect-busboy'); //middleware for form/file
 var bodyParser = require('body-parser');
 var multer = require('multer');
 var cloudinary = require('cloudinary');
-var SocketIo = require('socket.io');
+var verifyToken = require('./routes/verifyToken');
 
 cloudinary.config({
   cloud_name: 'www-livelytrips-com',
@@ -36,6 +36,12 @@ app.use(busboy());
 //Very important change for enabling cross domain origin ----------------Start
 app.use(function(req, res, next) {
     var oneof = false;
+   /*
+    if(req.originalUrl !=('/login'||'/test') && req.headers['authorization'])
+	{
+		res.status(401).send();
+	}
+	*/
     if(req.headers.origin) {
         res.header('Access-Control-Allow-Origin', req.headers.origin);
       //  res.header('Access-Control-Allow-Origin', "http://api.wunderground.com");
@@ -142,8 +148,11 @@ app.get('/autocomplete/:searchon/:search',product.autocomplete);
 app.post('/complete',product.autocomplete);
 //app.get('/isready',place.getstatus);
 app.post('/prepareCart',product.validatePackage);
-app.post('/submitOrder',product.placeOrder);
+app.post('/submitOrder',verifyToken,product.placeOrder);
 app.post('/getOrder',product.getOrders);
+app.post('/getSchema',product.GetSchema);
+app.post('/saveAddons',product.SaveAddon);
+app.post('/getAdditionalServices',product.GetAdditionalServices);
 
 //app.post('/test',product.FetchUpdatedAppDataCountAndScripts);
 
