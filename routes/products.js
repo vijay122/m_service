@@ -699,7 +699,7 @@ exports.GetProducts = function (req, res) {
 			datatable.push('Place');
 			datatable.push('Package');
 			datatable.push('Event');
-			datatable.push('AdditionalService');
+			//datatable.push('AdditionalService');
 		}
 		if(req.body.payload.sectionName=="admin")
 		{
