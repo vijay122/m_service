@@ -40,7 +40,7 @@
     "googlemaps": "^1.11.1",
     "jsonwebtoken": "^7.4.1",
     "literalify": "^0.4.0",
-    "mongodb": "^2.1.16",
+    "mongodb": "^2.2.31",
     "mongojs": "^2.4.0",
     "multer": "^1.0.1",
     "s3-image-uploader": "^1.0.4",
