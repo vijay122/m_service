@@ -158,7 +158,8 @@ app.post('/getAdditionalServices',product.GetAdditionalServices);
 
 app.post('/SendCallbackMessage/:tn', Touringutility.SendMessage);
 
-app.get('/index', function (request, response) {
+app.get('/ping', function (request, response) {
+    response.send("hi ping success");
 });
 //app.put('/places/:id', place.updatePlace);
 //app.delete('/places/:id', place.deletePlace);
