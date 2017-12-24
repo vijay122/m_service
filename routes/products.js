@@ -103,7 +103,7 @@ function getDurations (placearray,res) {
 	//return nodes;
 	//var nodes = yield plotMarkers(placearray);
 }
-var connectionString = 'mongodb://root:Vjy4livelytrips@148.72.246.39:27017/groundsDB?authSource=admin';
+var connectionString = 'mongodb://root:Vjy4livelytrips@127.0.0.1:27017/groundsDB?authSource=admin';
 
 process.on('SIGINT', function() {
 	mongoose.connection.close(function () {

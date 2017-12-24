@@ -7,7 +7,7 @@ var Async = require('async');
 var Server = mongo.Server,
     Db = mongo.Db,
     BSON = mongo.BSONPure;
-var server = new Server('192.169.147.51', 27017, {auto_reconnect: true});
+var server = new Server('127.0.0.1', 27017, {auto_reconnect: true});
 var geolib  = require('geolib');
 var mongojs = require('mongojs');
 var GoogleMapsAPI = require('googlemaps');
@@ -22,9 +22,7 @@ var forecast = new Forecast({
     }
 });
 
-//var connectionString = 'mongodb://root:Vjy4livelytrips@192.169.149.245:27017/placesDB?authSource=admin';
-
-var connectionString = 'mongodb://localhost:27017/placesDB';
+var connectionString = 'mongodb://root:Vjy4livelytrips@127.0.0.1:27017/placesDB?authSource=admin';
 var db = mongojs(connectionString);
 
 
@@ -36,7 +34,9 @@ var MongoClient = require('mongodb').MongoClient
 // Connection URL
 
 // Use connect method to connect to the Server
-MongoClient.connect(connectionString, function(err, db) {
+MongoClient.connect(connectionString,
+   // {user: 'username', pass: 'p@ssword'},
+	function(err, db) {
 	if(db!= null) {
 		assert.equal(null, err);
 		console.log("url:" + connectionString);

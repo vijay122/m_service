@@ -1,10 +1,10 @@
 var mongoose = require('mongoose');
 var User = require('../models/user');
-var connectionString = 'mongodb://root:Vjy4livelytrips@148.72.246.39:27017/placesDB?authSource=admin';
+var connectionString = 'mongodb://root:Vjy4livelytrips@127.0.0.1:27017/placesDB?authSource=admin';
 var utils = require('./utils');
 //var bcrypt = require('bcrypt');
 
-mongoose.connect('mongodb://root:Vjy4livelytrips@148.72.246.39:27017/placesDB?authSource=admin');
+mongoose.connect('mongodb://root:Vjy4livelytrips@127.0.0.1:27017/placesDB?authSource=admin');
 
 exports.updateUser = function (req, res) {
 	try
