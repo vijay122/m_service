@@ -141,11 +141,15 @@ function generate_id(req) {
 	var lower = str.toLowerCase();
 	var upper = str.toUpperCase();
 
-	var res = "";
+	var res = str;
+
+	/*
+	fix to allow the _ key in the id
 	for(var i=0; i<lower.length; ++i) {
 		if(lower[i] != upper[i] || lower[i].trim() === '')
 			res += str[i];
 	}
+	*/
 	res = res.replace(/\s+/g, '');
 	return res;
 }
