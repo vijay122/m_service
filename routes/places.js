@@ -7,7 +7,8 @@ var Async = require('async');
 var Server = mongo.Server,
     Db = mongo.Db,
     BSON = mongo.BSONPure;
-var server = new Server('127.0.0.1', 27017, {auto_reconnect: true});
+//var server = new Server('127.0.0.1', 27017, {auto_reconnect: true});
+var server = new Server('139.59.85.107', 27017, {auto_reconnect: true});
 var geolib  = require('geolib');
 var mongojs = require('mongojs');
 var GoogleMapsAPI = require('googlemaps');
@@ -22,7 +23,8 @@ var forecast = new Forecast({
     }
 });
 
-var connectionString = 'mongodb://root:Vjy4livelytrips@127.0.0.1:27017/placesDB?authSource=admin';
+//var connectionString = 'mongodb://root:Vjy4livelytrips@127.0.0.1:27017/placesDB?authSource=admin';
+var connectionString = 'mongodb://root:Vjy4livelytrips@139.59.85.107:27017/placesDB?authSource=admin';
 var db = mongojs(connectionString);
 
 
