@@ -36,7 +36,9 @@ var googleMapsClient = require('@google/maps').createClient({
 
 
 //db.packages.aggregate( [ { $unwind: "$category" },  { $sortByCount: "$category" } ] )
-ProductSchema.index({ loc : '2dsphere' });
+ProductSchema.index({ 'loc' : '2dsphere' });
+//Place.ensureIndex({'loc':'2dsphere'});
+
 
 
 //geocode({'placeId': place.place_id}, function(results, status) {
@@ -103,8 +105,8 @@ function getDurations (placearray,res) {
 	//return nodes;
 	//var nodes = yield plotMarkers(placearray);
 }
-//var connectionString = 'mongodb://root:Vjy4livelytrips@127.0.0.1:27017/groundsDB?authSource=admin';
-var connectionString = 'mongodb://root:Vjy4livelytrips@139.59.85.107:27017/groundsDB?authSource=admin';
+var connectionString = 'mongodb://root:Vjy4livelytrips@127.0.0.1:27017/groundsDB?authSource=admin';
+//var connectionString = 'mongodb://root:Vjy4livelytrips@139.59.85.107:27017/groundsDB?authSource=admin';
 process.on('SIGINT', function() {
 	mongoose.connection.close(function () {
 		console.log('Mongoose default connection disconnected through app termination');
@@ -896,7 +898,15 @@ var FindByIDAndThenNearby =function (req, callback) {
 					//maxDistance: meterConversion.kmToM(req.max),
 					num: 10
 				};
-				mongoose.models[req.findTable].ensureIndexes({point: "2dsphere"});
+				if(mongoose.models[req.findTable]) {
+                    mongoose.models[req.findTable].collection.ensureIndex({"loc": "2dsphere"},function(err,res){
+                    	debugger;
+                    	if(err)
+						{
+
+						}
+					});
+                }
 				//document exists });
 				if (mongoose.models[req.findTable] != undefined)
 					var query = {};
@@ -1079,7 +1089,15 @@ var geoFindFunction =function (req, callback) {
 	mongoose.models[req.findTable].count({}, function (err, count) {
 
 		if (count > 0) {
-			mongoose.models[req.findTable].ensureIndexes({point: "2dsphere"});
+            if(mongoose.models[req.findTable]) {
+                mongoose.models[req.findTable].collection.ensureIndex({"loc": "2dsphere"},function(err,x){
+                	debugger;
+                	if(err)
+					{
+
+					}
+				});
+            }
 			//document exists });
 			if (mongoose.models[req.findTable] != undefined)
 				var query = {};
@@ -1095,7 +1113,7 @@ var geoFindFunction =function (req, callback) {
 				}
 			}
 			mongoose.models[req.findTable].find(query, function (err, data) {
-				if (err) throw err;
+				if (err) {}//throw err;
 				else {
 					var datas = data.map(function (record) {
 						return record.toObject();
