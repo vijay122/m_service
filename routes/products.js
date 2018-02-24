@@ -105,8 +105,8 @@ function getDurations (placearray,res) {
 	//return nodes;
 	//var nodes = yield plotMarkers(placearray);
 }
-var connectionString = 'mongodb://root:Vjy4livelytrips@127.0.0.1:27017/groundsDB?authSource=admin';
-//var connectionString = 'mongodb://root:Vjy4livelytrips@139.59.85.107:27017/groundsDB?authSource=admin';
+//var connectionString = 'mongodb://root:Vjy4livelytrips@127.0.0.1:27017/groundsDB?authSource=admin';
+var connectionString = 'mongodb://root:Vjy4livelytrips@139.59.85.107:27017/groundsDB?authSource=admin';
 process.on('SIGINT', function() {
 	mongoose.connection.close(function () {
 		console.log('Mongoose default connection disconnected through app termination');
