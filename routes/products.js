@@ -152,8 +152,9 @@ function generate_id(req) {
 			res += str[i];
 	}
 	*/
-	res = res.replace(/\s+/g, '');
-	return res;
+	//res = res.replace(/\s+/g, '');
+   res = str.replace(/\s/g,'');
+    return res;
 }
 
 function getHotels(productlist)
