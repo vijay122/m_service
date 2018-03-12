@@ -43,6 +43,7 @@
     "mongodb": "^2.2.31",
     "mongojs": "^2.4.0",
     "multer": "^1.0.1",
+    "node-fetch": "^2.1.1",
     "s3-image-uploader": "^1.0.4",
     "smsgateway": "^0.1.2",
     "socket-io": "0.0.0",

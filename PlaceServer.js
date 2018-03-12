@@ -135,6 +135,7 @@ app.use(express.static(path.join(__dirname, 'images')));
 app.post('/test',product.GetProducts);
 app.get('/createAppScripts',product.FindCountFunction);
 app.post('/Save', product.addProduct);
+app.post('/SaveCrawlData', product.addCrawlProducts);
 app.post('/getProducts', product.GetProducts);
 app.post('/getCallBack', product.GetCallback);
 app.post('/login', user.loadUserInfo);

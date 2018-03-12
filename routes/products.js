@@ -10,6 +10,7 @@ function randomValueHex (len) {
 }
 var Order = require('../models/order');
 var Place = require('../models/place');
+var CrawlContents = require('../models/place');
 var Hotel = require('../models/hotel');
 var Event = require('../models/event');
 var Package = require('../models/package');
@@ -379,6 +380,20 @@ var message_obj = req.body.payload;
 	var message = new Message(message_obj);
 	message.save();
 	res.send({});
+}
+
+exports.addCrawlProducts = function(req,res)
+{
+    console.log("inside-add crawl products" + req);
+	var payload = req.body.payload;
+    CrawlContents.findOneAndUpdate({"_id": payload._id}, payload, {upsert: true}, function(err, result){
+        if (err) throw err;
+        if(result)
+        {
+
+        }
+        console.log('Crawler added!');
+    });
 }
 
 exports.addProduct = function (req, res) {
