@@ -154,6 +154,7 @@ app.post('/getOrder',product.getOrders);
 app.post('/getSchema',product.GetSchema);
 app.post('/saveAddons',product.SaveAddon);
 app.post('/getAdditionalServices',product.GetAdditionalServices);
+app.post('/findPendingValidationProducts',product.findPendingValidation);
 
 //app.post('/test',product.FetchUpdatedAppDataCountAndScripts);
 

@@ -1560,3 +1560,25 @@ Array.prototype.getPackages = function()
 	return packages;
 }
 
+
+exports.findPendingValidation =function (req, callback) {
+    return  function(callback) {
+        try {
+         //   var findRequest = getCreateRequest(req);
+
+            mongoose.models["Place"].find({"isValidated":false},{},{sort:{'created_date':-1}}, function(err, data) {
+                if (err) throw err;
+                var datas = data.map(function (record) {
+                    return record.toObject();
+                });
+                callback(null, datas);
+            });
+        }
+        catch (e)
+        {
+            console.log("Exception in FindFunction:"+e);
+        }
+    };
+
+}
+
