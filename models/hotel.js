@@ -24,6 +24,7 @@ var ProductSchema = new Schema({
 	created_date: { type: Date, default: Date.now },
 	created_by:String,
 	season: String,
+    isValidated:Boolean,
 });
 
 var Hotel = mongoose.model('Hotel', ProductSchema);

@@ -39,6 +39,7 @@ var PackageSchema = new Schema({
 	aboutoperator:String,
 	category:[String],
 	season: String,
+    isValidated:Boolean,
 });
 
 var Package = mongoose.model('Package', PackageSchema);

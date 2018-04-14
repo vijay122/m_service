@@ -422,6 +422,7 @@ exports.addProduct = function (req, res) {
 		image: req.body.payload.image,
 		created_date: Date.now(),
 		season: "summer",
+		isValidated:req.body.payload.isValidated,
 	});
 
 	if(req.body.payload.type=="hotel")
@@ -448,6 +449,7 @@ exports.addProduct = function (req, res) {
 			image: req.body.payload.image,
 			created_date: Date.now(),
 			season: "summer",
+            isValidated:req.body.payload.isValidated,
 		});
 	}
 	if(req.body.payload.type=="event")
@@ -473,6 +475,7 @@ exports.addProduct = function (req, res) {
 			image: req.body.payload.image,
 			created_date: Date.now(),
 			season: "summer",
+            isValidated:req.body.payload.isValidated,
 		});
 	}
 	if(req.body.payload.type=="package")
@@ -510,6 +513,7 @@ exports.addProduct = function (req, res) {
 			aboutoperator:req.body.payload.aboutoperator,
 			category:req.body.payload.category,
 			season: String,
+            isValidated:req.body.payload.isValidated,
 		});
 	}
 
@@ -916,7 +920,6 @@ var FindByIDAndThenNearby =function (req, callback) {
 				};
 				if(mongoose.models[req.findTable]) {
                     mongoose.models[req.findTable].collection.ensureIndex({"loc": "2dsphere"},function(err,res){
-                    	debugger;
                     	if(err)
 						{
 
@@ -1107,7 +1110,6 @@ var geoFindFunction =function (req, callback) {
 		if (count > 0) {
             if(mongoose.models[req.findTable]) {
                 mongoose.models[req.findTable].collection.ensureIndex({"loc": "2dsphere"},function(err,x){
-                	debugger;
                 	if(err)
 					{
 
@@ -1561,8 +1563,7 @@ Array.prototype.getPackages = function()
 }
 
 
-exports.findPendingValidation =function (req, callback) {
-    return  function(callback) {
+exports.findPendingValidation =function (req, res) {
         try {
          //   var findRequest = getCreateRequest(req);
 
@@ -1571,14 +1572,13 @@ exports.findPendingValidation =function (req, callback) {
                 var datas = data.map(function (record) {
                     return record.toObject();
                 });
-                callback(null, datas);
+               // callback(null, datas);
+                res.send(200, JSON.stringify(datas));
             });
         }
         catch (e)
         {
             console.log("Exception in FindFunction:"+e);
         }
-    };
-
 }
 
