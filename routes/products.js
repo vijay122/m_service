@@ -869,6 +869,7 @@ var mapCreateRequest = function(req, request)
 	}
 	if(req._id != undefined)
 		reqFormat._id = req._id;
+		reqFormat.isValidated = true;
 	if(req['searchby'] != undefined)
 		reqFormat[req['searchby']] = req['searchvalue'];
 	return reqFormat;
