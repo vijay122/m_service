@@ -894,6 +894,7 @@ var getCreateRequest= function(req)
 		reqFormat.state = req.state;
 	if(req.category != undefined)
 		reqFormat.category = req.category;
+	reqFormat.isValidated = true;
 	return reqFormat;
 }
 
