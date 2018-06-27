@@ -239,7 +239,6 @@ var createOrder=function(cartItems,res)
 
 exports.validatePackage = function(req,res)
 {
-	var package ={};
 	var event={};
 	var hotel={};
     var tripInfo = req.body.payload.tripInfo;
@@ -356,7 +355,6 @@ function createCalender(calenderItems)
 	}
 }
 exports.placeOrder = function (req, res) {
-	var package ={};
 	var event={};
 	var hotel={};
 	var cartItems = req.body.payload.products;
@@ -397,7 +395,7 @@ exports.addCrawlProducts = function(req,res)
 }
 
 exports.addProduct = function (req, res) {
-	var package ={};
+	var pkg ={};
 	var event={};
 	var hotel={};
 	var product = Place({
@@ -480,7 +478,7 @@ exports.addProduct = function (req, res) {
 	}
 	if(req.body.payload.type=="package")
 	{
-		package = Package({
+        pkg = Package({
 			_id: req.body.payload._id?req.body.payload._id:generate_id(req),
 			name: req.body.payload.name,
 			title:req.body.payload.title,
@@ -552,8 +550,8 @@ exports.addProduct = function (req, res) {
 	}
 	if(req.body.payload.type=="package")
 	{
-		console.log('Adding Place: ' + JSON.stringify(package));
-		var upsertData = package.toObject();
+		console.log('Adding Place: ' + JSON.stringify(pkg));
+		var upsertData = pkg.toObject();
 		Package.findOneAndUpdate({"_id": upsertData._id}, upsertData, {upsert: true}, function(err, result){
 			if (err) throw err;
 
@@ -1279,7 +1277,7 @@ query.exec(function(err, users) {
 	}
 }
 
-buildResultSet = function(docs) {
+var buildResultSet = function(docs) {
 	var result = [];
 	for(var object in docs){
 		result.push(docs[object]);
