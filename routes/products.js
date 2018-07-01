@@ -398,166 +398,160 @@ exports.addProduct = function (req, res) {
 	var pkg ={};
 	var event={};
 	var hotel={};
-	var product = Place({
-		_id: req.body.payload._id?req.body.payload._id:generate_id(req),
-		name: req.body.payload.name,
-		title:req.body.payload.title,
-		type:req.body.payload.type,
-		loc: {
-			type: "Point",
-			coordinates: [req.body.payload.longitude, req.body.payload.latitude]
-		},
-		description:req.body.payload.description,
-		whattoeat:req.body.payload.whattoeat,
-		whattodo:req.body.payload.whattodo,
-		howtoreach:req.body.payload.howtoreach,
-		city :req.body.payload.city,
-		state:req.body.payload.state,
-		country:req.body.payload.country,
-		pincode:req.body.payload.pincode,
-		landmark: req.body.payload.landmark,
-		displaypicture:req.body.payload.displaypicture,
-		image: req.body.payload.image,
-		created_date: Date.now(),
-		season: "summer",
-		isValidated:req.body.payload.isValidated,
-	});
+	if(req.body.payload.longitude && req.body.payload.latitude) {
+        var product = Place({
+            _id: req.body.payload._id ? req.body.payload._id : generate_id(req),
+            name: req.body.payload.name,
+            title: req.body.payload.title,
+            type: req.body.payload.type,
+            loc: {
+                type: "Point",
+                coordinates: [req.body.payload.longitude, req.body.payload.latitude]
+            },
+            description: req.body.payload.description,
+            whattoeat: req.body.payload.whattoeat,
+            whattodo: req.body.payload.whattodo,
+            howtoreach: req.body.payload.howtoreach,
+            city: req.body.payload.city,
+            state: req.body.payload.state,
+            country: req.body.payload.country,
+            pincode: req.body.payload.pincode,
+            landmark: req.body.payload.landmark,
+            displaypicture: req.body.payload.displaypicture,
+            image: req.body.payload.image,
+            created_date: Date.now(),
+            season: "summer",
+            isValidated: req.body.payload.isValidated,
+        });
 
-	if(req.body.payload.type=="hotel")
-	{
-		hotel = Hotel({
-			_id: req.body.payload._id?req.body.payload._id:generate_id(req),
-			name: req.body.payload.name,
-			title:req.body.payload.title,
-			type:req.body.payload.type,
-			loc: {
-				type: "Point",
-				coordinates: [req.body.payload.longitude, req.body.payload.latitude]
-			},
-			city :req.body.payload.city,
-			state:req.body.payload.state,
-			country:req.body.payload.country,
-			pincode:req.body.payload.pincode,
-			description:req.body.payload.description,
-			whattoeat:req.body.payload.whattoeat,
-			whattodo:req.body.payload.whattodo,
-			howtoreach:req.body.payload.howtoreach,
-			landmark: req.body.payload.landmark,
-			displaypicture:req.body.payload.displaypicture,
-			image: req.body.payload.image,
-			created_date: Date.now(),
-			season: "summer",
-            isValidated:req.body.payload.isValidated,
-		});
-	}
-	if(req.body.payload.type=="event")
-	{
-		event = Event({
-			_id: req.body.payload._id?req.body.payload._id:generate_id(req),
-			name: req.body.payload.name,
-			title:req.body.payload.title,
-			type:req.body.payload.type,
-			loc: {
-				type: "Point",
-				coordinates: [req.body.payload.longitude, req.body.payload.latitude]
-			},
-			city :req.body.payload.city,
-			state:req.body.payload.state,
-			pincode:req.body.payload.pincode,
-			description:req.body.payload.description,
-			whattoeat:req.body.payload.whattoeat,
-			whattodo:req.body.payload.whattodo,
-			howtoreach:req.body.payload.howtoreach,
-			landmark: req.body.payload.landmark,
-			displaypicture:req.body.payload.displaypicture,
-			image: req.body.payload.image,
-			created_date: Date.now(),
-			season: "summer",
-            isValidated:req.body.payload.isValidated,
-		});
-	}
-	if(req.body.payload.type=="package")
-	{
-        pkg = Package({
-			_id: req.body.payload._id?req.body.payload._id:generate_id(req),
-			name: req.body.payload.name,
-			title:req.body.payload.title,
-			type:req.body.payload.type,
-			loc: {
-				type: "Point",
-				coordinates: [req.body.payload.longitude, req.body.payload.latitude]
-			},
-			district:req.body.payload.district,
-			city :req.body.payload.city,
-			state:req.body.payload.state,
-			pincode:req.body.payload.pincode,
-			noofdays:req.body.payload.noofdays,
-			noofnights:req.body.payload.noofnights,
-			duration:req.body.payload.duration,
-			description:req.body.payload.description,
-			whattoeat:req.body.payload.whattoeat,
-			whattodo:req.body.payload.whattodo,
-			howtoreach:req.body.payload.howtoreach,
-			landmark: req.body.payload.landmark,
-			assets:req.body.payload.assets,
-			price: req.body.payload.price,
-			products:req.body.payload.products,
-			classification:req.body.payload.classification,
-			sale: [{
-				salePrice: 0,
-				saleEndDate: Date.now(),
-			}],
-			created_by:req.body.payload.operator,
-			aboutoperator:req.body.payload.aboutoperator,
-			category:req.body.payload.category,
-			season: String,
-            isValidated:req.body.payload.isValidated,
-		});
-	}
+        if (req.body.payload.type == "hotel") {
+            hotel = Hotel({
+                _id: req.body.payload._id ? req.body.payload._id : generate_id(req),
+                name: req.body.payload.name,
+                title: req.body.payload.title,
+                type: req.body.payload.type,
+                loc: {
+                    type: "Point",
+                    coordinates: [req.body.payload.longitude, req.body.payload.latitude]
+                },
+                city: req.body.payload.city,
+                state: req.body.payload.state,
+                country: req.body.payload.country,
+                pincode: req.body.payload.pincode,
+                description: req.body.payload.description,
+                whattoeat: req.body.payload.whattoeat,
+                whattodo: req.body.payload.whattodo,
+                howtoreach: req.body.payload.howtoreach,
+                landmark: req.body.payload.landmark,
+                displaypicture: req.body.payload.displaypicture,
+                image: req.body.payload.image,
+                created_date: Date.now(),
+                season: "summer",
+                isValidated: req.body.payload.isValidated,
+            });
+        }
+        if (req.body.payload.type == "event") {
+            event = Event({
+                _id: req.body.payload._id ? req.body.payload._id : generate_id(req),
+                name: req.body.payload.name,
+                title: req.body.payload.title,
+                type: req.body.payload.type,
+                loc: {
+                    type: "Point",
+                    coordinates: [req.body.payload.longitude, req.body.payload.latitude]
+                },
+                city: req.body.payload.city,
+                state: req.body.payload.state,
+                pincode: req.body.payload.pincode,
+                description: req.body.payload.description,
+                whattoeat: req.body.payload.whattoeat,
+                whattodo: req.body.payload.whattodo,
+                howtoreach: req.body.payload.howtoreach,
+                landmark: req.body.payload.landmark,
+                displaypicture: req.body.payload.displaypicture,
+                image: req.body.payload.image,
+                created_date: Date.now(),
+                season: "summer",
+                isValidated: req.body.payload.isValidated,
+            });
+        }
+        if (req.body.payload.type == "package") {
+            pkg = Package({
+                _id: req.body.payload._id ? req.body.payload._id : generate_id(req),
+                name: req.body.payload.name,
+                title: req.body.payload.title,
+                type: req.body.payload.type,
+                loc: {
+                    type: "Point",
+                    coordinates: [req.body.payload.longitude, req.body.payload.latitude]
+                },
+                district: req.body.payload.district,
+                city: req.body.payload.city,
+                state: req.body.payload.state,
+                pincode: req.body.payload.pincode,
+                noofdays: req.body.payload.noofdays,
+                noofnights: req.body.payload.noofnights,
+                duration: req.body.payload.duration,
+                description: req.body.payload.description,
+                whattoeat: req.body.payload.whattoeat,
+                whattodo: req.body.payload.whattodo,
+                howtoreach: req.body.payload.howtoreach,
+                landmark: req.body.payload.landmark,
+                assets: req.body.payload.assets,
+                price: req.body.payload.price,
+                products: req.body.payload.products,
+                classification: req.body.payload.classification,
+                sale: [{
+                    salePrice: 0,
+                    saleEndDate: Date.now(),
+                }],
+                created_by: req.body.payload.operator,
+                aboutoperator: req.body.payload.aboutoperator,
+                category: req.body.payload.category,
+                season: String,
+                isValidated: req.body.payload.isValidated,
+            });
+        }
 
 
-	if(req.body.payload.type=="standalone")
-	{
-		console.log('Adding Place: ' + JSON.stringify(product));
-		var upsertData = product.toObject();
-		Place.findOneAndUpdate({"_id": upsertData._id}, upsertData, {upsert: true}, function(err, result){
-			if (err) throw err;
-			if(result)
-			{
+        if (req.body.payload.type == "standalone") {
+            console.log('Adding Place: ' + JSON.stringify(product));
+            var upsertData = product.toObject();
+            Place.findOneAndUpdate({"_id": upsertData._id}, upsertData, {upsert: true}, function (err, result) {
+                if (err) throw err;
+                if (result) {
 
-			}
-			console.log('Place created!');
-		});
-	}
-	if(req.body.payload.type=="event")
-	{
-		console.log('Adding Place: ' + JSON.stringify(event));
-		var upsertData = event.toObject();
-		Event.findOneAndUpdate({"_id": upsertData._id}, upsertData, {upsert: true}, function(err, result){
-			if (err) throw err;
+                }
+                console.log('Place created!');
+            });
+        }
+        if (req.body.payload.type == "event") {
+            console.log('Adding Place: ' + JSON.stringify(event));
+            var upsertData = event.toObject();
+            Event.findOneAndUpdate({"_id": upsertData._id}, upsertData, {upsert: true}, function (err, result) {
+                if (err) throw err;
 
-			console.log('Place created!');
-		});
-	}
-	if(req.body.payload.type=="hotel")
-	{
-		console.log('Adding Place: ' + JSON.stringify(hotel));
-		var upsertData = hotel.toObject();
-		Hotel.findOneAndUpdate({"_id": upsertData._id}, upsertData, {upsert: true}, function(err, result){
-			if (err) throw err;
-			console.log('Place created!');
-		});
-	}
-	if(req.body.payload.type=="package")
-	{
-		console.log('Adding Place: ' + JSON.stringify(pkg));
-		var upsertData = pkg.toObject();
-		Package.findOneAndUpdate({"_id": upsertData._id}, upsertData, {upsert: true}, function(err, result){
-			if (err) throw err;
+                console.log('Place created!');
+            });
+        }
+        if (req.body.payload.type == "hotel") {
+            console.log('Adding Place: ' + JSON.stringify(hotel));
+            var upsertData = hotel.toObject();
+            Hotel.findOneAndUpdate({"_id": upsertData._id}, upsertData, {upsert: true}, function (err, result) {
+                if (err) throw err;
+                console.log('Place created!');
+            });
+        }
+        if (req.body.payload.type == "package") {
+            console.log('Adding Place: ' + JSON.stringify(pkg));
+            var upsertData = pkg.toObject();
+            Package.findOneAndUpdate({"_id": upsertData._id}, upsertData, {upsert: true}, function (err, result) {
+                if (err) throw err;
 
-			console.log('Place created!');
-		});
-	}
+                console.log('Place created!');
+            });
+        }
+    }
 }
 
 exports.GetRatingEntries = function(req,res)
