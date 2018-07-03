@@ -731,9 +731,9 @@ exports.GetProducts = function (req, res) {
 		for (var  i = 0; i < datatable.length; i++ ) {
 			var request ={};
 			request.findTable = datatable[i];
-			request.lat =req.body.payload.lat;
-			request.lon= req.body.payload.lon;
-			request.max = req.body.payload.max;
+			//request.lat =req.body.payload.lat;
+			//request.lon= req.body.payload.lon;
+			//request.max = req.body.payload.max;
 			if(req.body.payload.searchby =="_id")
 			{
 				request._id =req.body.payload.searchvalue;
@@ -841,27 +841,39 @@ var mapCreateRequest = function(req, request)
 	{
 		reqFormat = request;
 	}
+	if(req.findTable)
+	{
+		reqFormat.findTable = req.findTable;
+	}
 	if( req.searchOptions && req.searchOptions.searchOptions && Array.isArray(req.searchOptions.searchOptions))
 	{
 		for(var s=0; s<req.searchOptions.searchOptions.length;s++)
 		{
-			reqFormat[req.searchOptions.searchOptions[s].split(',')[0]] = req.searchOptions.searchOptions[s].split(',')[1];
+			if(req.searchOptions.searchOptions[s].split(',')[1]) {
+                reqFormat[req.searchOptions.searchOptions[s].split(',')[0]] = req.searchOptions.searchOptions[s].split(',')[1];
+            }
 			//reqFormat[[req.searchOptions.search[0]]]=reqFormat[[req.searchOptions.search[1]]];
 		}
 	}
 	else if( req.searchOptions && req.searchOptions.searchOptions && !Array.isArray(req.searchOptions.searchOptions))
 	{
-			reqFormat[req.searchOptions.searchOptions.split(',')[0]] = req.searchOptions.searchOptions.split(',')[1];
+		if(req.searchOptions.searchOptions.split(',')[1]) {
+            reqFormat[req.searchOptions.searchOptions.split(',')[0]] = req.searchOptions.searchOptions.split(',')[1];
+        }
 			//reqFormat[[req.searchOptions.search[0]]]=reqFormat[[req.searchOptions.search[1]]];
 	}
 	if(req.searchOptions && req.searchOptions.search)
 	for(var s=0; s<req.searchOptions.search.length;s++)
 	{
-		reqFormat[[req.searchOptions.search[0]]]=reqFormat[[req.searchOptions.search[1]]];
+		if(reqFormat[[req.searchOptions.search[1]]]) {
+            reqFormat[[req.searchOptions.search[0]]] = reqFormat[[req.searchOptions.search[1]]];
+        }
 	}
 	if(req._id != undefined)
 		reqFormat._id = req._id;
-		reqFormat.isValidated = true;
+	if(req.sectionName!="search") {
+        reqFormat.isValidated = true;
+    }
 	if(req['searchby'] != undefined)
 		reqFormat[req['searchby']] = req['searchvalue'];
 	return reqFormat;
@@ -886,14 +898,16 @@ var getCreateRequest= function(req)
 		reqFormat.state = req.state;
 	if(req.category != undefined)
 		reqFormat.category = req.category;
-	reqFormat.isValidated = true;
+    if(req.sectionName!="search") {
+        reqFormat.isValidated = true;
+    }
 	return reqFormat;
 }
 
 var FindByIDAndThenNearby =function (req, callback) {
 	return function (callback) {
 		try {
-			var findRequest = getCreateRequest(req);
+			var findRequest = mapCreateRequest(req);
 			mongoose.models[req.findTable].find(findRequest, {}, {sort: {'created_date': -1}}, function (err, data) {
 				if (err) throw err;
 				var datas = data.map(function (record) {
@@ -965,7 +979,7 @@ var FindCategoryAndCount = function(req,callback)
 var GetScripts = function (req,callback) {
 	return function (callback) {
 		try {
-			var findRequest = getCreateRequest(req);
+			var findRequest = mapCreateRequest(req);
 
 			mongoose.models[req.findTable].find(findRequest, {}, {sort: {'created_date': -1}}, function (err, data) {
 				if (err) throw err;
@@ -988,7 +1002,7 @@ var GetScripts = function (req,callback) {
 exports.FindCountFunction = function (req,callback) {
 	//return function (callback) {
 		try {
-			var findRequest = getCreateRequest(req);
+			var findRequest = mapCreateRequest(req);
 var script ={};
 script.packages="Upto 50% offer in south india tours.";
 script.hotels="Book a premium hotel now before 15th this month and get a chance to fly france";
@@ -1026,9 +1040,10 @@ script.events="Buy 1 ticket to Champions league and get 1 ticket absolutely free
 var FindFullVolumeFunction =function (req, callback) {
 	return  function(callback) {
 		try {
-			var findRequest = getCreateRequest(req);
+			//var findRequest = mapCreateRequest(req);
 var tableName = (req.findTable!= undefined && req.findTable=="packages")?"Package":req.findTable;
-			mongoose.models[tableName].find(findRequest,{},{sort:{'created_date':-1}}, function(err, data) {
+            delete req.findTable;
+			mongoose.models[tableName].find(req,{},{sort:{'created_date':-1}}, function(err, data) {
 				if (err) throw err;
 				var datas = data.map(function (record) {
 					return record.toObject();
@@ -1051,9 +1066,10 @@ var tableName = (req.findTable!= undefined && req.findTable=="packages")?"Packag
 var FindFunction =function (req, callback) {
 	return  function(callback) {
 		try {
-var findRequest = getCreateRequest(req);
-
-		mongoose.models[req.findTable].find(findRequest,{},{sort:{'created_date':-1}}, function(err, data) {
+var findRequest = mapCreateRequest(req);
+            var tableName = (findRequest.findTable!= undefined && findRequest.findTable=="packages")?"Package":findRequest.findTable;
+            delete findRequest.findTable;
+		mongoose.models[tableName].find(findRequest,{},{sort:{'created_date':-1}}, function(err, data) {
 			if (err) throw err;
 			var datas = data.map(function (record) {
 				return record.toObject();
