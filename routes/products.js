@@ -552,6 +552,7 @@ exports.addProduct = function (req, res) {
             });
         }
     }
+    return res.send(200, {status:"ok"});
 }
 
 exports.GetRatingEntries = function(req,res)
