@@ -110,7 +110,7 @@ app.route('/api/photo')
 });
 
 //app.configure(function () {
-    app.set('port', process.env.PORT || 8000);
+    app.set('port', process.env.PORT || 4000);
    // app.use(express.logger('dev'));  /* 'default', 'short', 'tiny', 'dev' */
    // app.use(express.bodyParser()),
     app.use(express.static(path.join(__dirname, 'public')));
